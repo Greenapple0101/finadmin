@@ -6,7 +6,8 @@ package io.github.greenapple0101.finadmin.hello;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -15,9 +16,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// HelloController와 웹 요청 처리에 필요한 Spring 설정만 준비합니다.
-// 전체 앱의 실행 확인은 README의 bootRun 또는 JAR 실행 방법으로 할 수 있습니다.
-@WebMvcTest(HelloController.class)
+// 전체 앱의 보안 설정도 준비해서 공개 API가 토큰 없이 호출되는지 확인합니다.
+// 이 요청에는 JWT가 없으므로 Keycloak의 공개 키를 받아 올 필요도 없습니다.
+@SpringBootTest
+@AutoConfigureMockMvc
 class HelloControllerTest {
 
     // Spring이 준비한 테스트 도구를 넣어 줍니다. 여기서 직접 new로 만들 필요가 없습니다.

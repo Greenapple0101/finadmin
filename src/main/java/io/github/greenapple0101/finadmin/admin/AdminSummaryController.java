@@ -5,8 +5,8 @@
 //
 // [인증·인가를 공부할 때 기억할 점]
 // 주소에 admin이라는 글자가 들어 있어도 관리자만 접근할 수 있게 되는 것은 아닙니다.
-// 지금은 이 앱에 접속할 수 있는 누구나 응답을 받을 수 있습니다.
-// 이후에는 Keycloak의 토큰을 검증하고 관리자 역할까지 확인한 뒤 응답하도록 만들 예정입니다.
+// security/SecurityConfiguration이 먼저 토큰을 검증하고 FinAdmin의 admin 역할을 확인합니다.
+// 그 검사를 통과한 요청에 대해서만 이 Controller가 데이터를 만듭니다.
 
 package io.github.greenapple0101.finadmin.admin;
 
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminSummaryController {
 
     // 이 주소로 GET 요청이 오면 실행합니다. GET은 정보를 달라는 HTTP 요청 방식입니다.
-    // 이 표시에는 로그인 확인이나 권한 검사 기능이 없습니다.
+    // @GetMapping 자체에는 권한 검사 기능이 없습니다. 앞단의 SecurityFilterChain이 검사합니다.
     @GetMapping("/api/admin/summary")
     public AdminSummary summary() {
         // new는 아래 record 모양에 맞는 데이터 묶음을 하나 만듭니다.
