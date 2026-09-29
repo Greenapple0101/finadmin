@@ -1,0 +1,5 @@
+# 운영체제에 따라 줄바꿈이 달라져 코드 전체가 바뀐 것처럼 보이는 일을 줄입니다.
+* text=auto
+gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary

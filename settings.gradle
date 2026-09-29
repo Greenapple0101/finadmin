@@ -1,0 +1,2 @@
+// Gradle에서 부르는 프로젝트 이름입니다. 만들어지는 JAR 파일 이름에도 사용됩니다.
+rootProject.name = 'finadmin'
