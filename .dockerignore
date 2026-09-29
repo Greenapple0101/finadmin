@@ -1,0 +1,5 @@
+# 빌드에 필요한 JAR만 Docker로 보냅니다. .env와 소스·Git 이력은 포함하지 않습니다.
+**
+!build/
+!build/libs/
+!build/libs/finadmin-0.0.1-SNAPSHOT.jar

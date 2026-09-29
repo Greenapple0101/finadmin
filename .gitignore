@@ -18,3 +18,7 @@ out/
 .env.*
 !.env.example
 *.log
+
+# 로컬 실행 중 만들어지는 검증 결과와 임시 파일입니다.
+.local/
+__pycache__/

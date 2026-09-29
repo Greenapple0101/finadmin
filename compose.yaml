@@ -1,0 +1,104 @@
+# [이 파일이 하는 일] 이번 인증 실습에 필요한 서버들을 하나의 묶음으로 실행합니다.
+# finaccess 저장소는 finadmin과 같은 부모 폴더 아래에 둡니다.
+# 기존 finaccess 개발 DB와 다른 저장 공간이므로 기존 데이터를 건드리지 않습니다.
+name: finlab
+services:
+  keycloak-db:
+    image: postgres:17.11-bookworm
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Run scripts/init-local.py first}
+    volumes:
+      - keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U keycloak -d keycloak"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.4
+    # 로컬 HTTP 실습입니다. 운영 배포에서는 TLS와 운영 모드 설정이 필요합니다.
+    command: [start-dev, --import-realm]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: bootstrap-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      # 브라우저에서 보이는 발급자 주소는 고정하고, 내부 JWKS 주소는 요청 주소를 사용합니다.
+      KC_HOSTNAME: http://localhost:18080
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HEALTH_ENABLED: "true"
+      JAVA_OPTS_KC_HEAP: -Xms128m -Xmx512m
+      LAB_ALICE_PASSWORD: ${LAB_ALICE_PASSWORD}
+      LAB_BOB_PASSWORD: ${LAB_BOB_PASSWORD}
+      LAB_ADMIN_PASSWORD: ${LAB_ADMIN_PASSWORD}
+      LAB_OUTSIDER_PASSWORD: ${LAB_OUTSIDER_PASSWORD}
+    ports: ["127.0.0.1:18080:8080"]
+    volumes:
+      - ./infra/keycloak/finlab-realm.json:/opt/keycloak/data/import/finlab-realm.json:ro
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+
+  app-db:
+    image: postgres:17.11-bookworm
+    environment:
+      POSTGRES_DB: finaccess
+      POSTGRES_USER: finaccess
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD:?Run scripts/init-local.py first}
+    volumes:
+      - app_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U finaccess -d finaccess"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  finaccess:
+    build: ../finaccess
+    environment:
+      DB_URL: jdbc:postgresql://app-db:5432/finaccess
+      DB_USERNAME: finaccess
+      DB_PASSWORD: ${APP_DB_PASSWORD}
+      JWT_ISSUER_URI: http://localhost:18080/realms/finlab
+      JWT_JWK_SET_URI: http://keycloak:8080/realms/finlab/protocol/openid-connect/certs
+      JWT_AUDIENCE: finaccess-api
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8080
+    # 직접 호출은 백엔드도 스스로 JWT를 검증하는지 확인하기 위한 로컬 실습 경로입니다.
+    ports: ["127.0.0.1:18082:8080"]
+    depends_on:
+      app-db:
+        condition: service_healthy
+
+  finadmin:
+    build: .
+    environment:
+      JWT_ISSUER_URI: http://localhost:18080/realms/finlab
+      JWT_JWK_SET_URI: http://keycloak:8080/realms/finlab/protocol/openid-connect/certs
+      JWT_AUDIENCE: finadmin-api
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8081
+    ports: ["127.0.0.1:18083:8081"]
+
+  web:
+    image: nginx:1.28-alpine
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./infra/web.conf:/etc/nginx/conf.d/default.conf:ro
+
+  apisix:
+    image: apache/apisix:3.18.0-debian
+    ports: ["127.0.0.1:18090:9080"]
+    volumes:
+      - ./infra/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./infra/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+    depends_on: [keycloak, finaccess, finadmin, web]
+
+volumes:
+  keycloak_data:
+  app_data:

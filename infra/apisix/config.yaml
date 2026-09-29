@@ -1,0 +1,37 @@
+# [이 파일이 하는 일] APISIX 프로그램 자체를 어떻게 실행할지 정합니다.
+# 실제 API 주소와 인증 규칙은 옆의 apisix.yaml에 있습니다.
+apisix:
+  # 컨테이너 안에서는 9080번으로 받고, compose.yaml이 내 컴퓨터의 18090번과 연결합니다.
+  node_listen: 9080
+  enable_admin: false
+  enable_control: false
+  enable_ipv6: false
+  ssl:
+    enable: false
+
+# [설정을 읽는 방법] 별도 etcd 서버 대신 파일 하나를 읽는 standalone 방식입니다.
+# data_plane은 요청을 처리하는 서버라는 뜻입니다. 관리 API는 사용하지 않습니다.
+deployment:
+  role: data_plane
+  role_data_plane:
+    config_provider: yaml
+
+nginx_config:
+  worker_processes: 2
+  # DEBUG 로그에는 인증 라이브러리가 토큰 내용을 남길 수 있어서 켜지 않습니다.
+  error_log_level: warn
+  http:
+    # 요청 헤더, 쿼리 문자열, 본문은 기록하지 않습니다.
+    # 특히 로그인 후 돌아오는 URL의 code가 접근 로그에 남지 않도록 $request 대신 $uri를 씁니다.
+    access_log_format: '$remote_addr [$time_local] $request_method $uri $status $request_time $upstream_status'
+
+# 이번 실습에서 사용하는 기능만 준비합니다.
+# 목록의 순서는 실행 순서가 아닙니다. 각 플러그인의 phase와 priority가 실행 순서를 정합니다.
+plugins:
+  - openid-connect
+  - proxy-rewrite
+  - response-rewrite
+  - serverless-post-function
+
+# 이번 실습은 HTTP만 사용합니다. 기본 TCP 플러그인의 불필요한 로딩을 끕니다.
+stream_plugins: []
