@@ -2,6 +2,8 @@
 
 Keycloak 관리 화면의 항목이 많아도 이번 실습에서 먼저 읽을 곳은 Realm, Clients, Users 세 곳입니다. 실제 초기 설정은 `infra/keycloak/finlab-realm.json`에 있습니다.
 
+콘솔의 필드별 의미와 JWT·Spring 코드 연결까지 따라가려면 [Keycloak 핸즈온 보고서](11-keycloak-hands-on-report.md)를 읽습니다. 이 문서는 용어를 먼저 구분하는 짧은 안내입니다.
+
 ## Realm: 설정을 모으는 실습 영역
 
 `finlab` Realm 안에 이번 앱의 사용자와 클라이언트를 둡니다. `master`는 Keycloak 자체를 관리하는 영역이며, 업무 앱의 사용자를 거기에 넣지 않습니다. Realm 이름은 토큰 발급자 주소 `http://localhost:18080/realms/finlab`에도 들어갑니다.

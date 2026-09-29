@@ -3,6 +3,8 @@
 작성일: 2026-09-29
 저장소: [FinAccess](https://github.com/Greenapple0101/finaccess), [FinAdmin](https://github.com/Greenapple0101/finadmin)
 
+학습 자료: [Keycloak 콘솔 핸즈온 보고서](11-keycloak-hands-on-report.md) · [현재 설정값과 추가 확인 결과](12-keycloak-settings-reference.md)
+
 ## 진행 목적
 
 Keycloak 로그인 연동을 실제 API 사용 흐름까지 확장하여, Gateway와 여러 백엔드가 JWT를 독립적으로 검증하고 역할·업무 데이터 범위에 따라 접근을 제한하는 구성을 구현했습니다.

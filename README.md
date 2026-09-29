@@ -141,6 +141,8 @@ FinAdmin만 Java로 읽어 보려면 `./gradlew bootRun`도 가능합니다. 이
 
 주석과 문서는 파일의 역할 → 요청이 흐르는 순서 → 설정과 문법의 의미를 쉬운 말로 설명합니다.
 
+**Keycloak 콘솔을 열어 놓고 공부할 때는 [핸즈온 보고서](docs/11-keycloak-hands-on-report.md)부터 읽습니다.** 메뉴 위치 → 현재 값 → 설정 이유 → JWT 변화 → API 응답까지 연결합니다. [설정값 목록](docs/12-keycloak-settings-reference.md)에는 실제 서버에서 조회한 값과 보고서 작성 중 새로 통과한 읽기 전용 API 확인 32건을 모았습니다.
+
 1. [처음 FinAdmin 앱을 만든 순서](docs/01-first-application.md) — **인증을 넣기 전의 과거 단계**입니다. 현재 접근 규칙은 05·06번을 기준으로 읽습니다.
 2. [Keycloak 실행 환경](docs/02-keycloak-setup.md)
 3. [Realm·Client·사용자·역할](docs/03-keycloak-realm-client-role.md)
@@ -151,6 +153,8 @@ FinAdmin만 Java로 읽어 보려면 `./gradlew bootRun`도 가능합니다. 이
 8. [전체 흐름의 검증 결과와 재현 방법](docs/08-end-to-end-verification.md)
 9. [회사 내부 공유 문서](docs/09-internal-sharing.md)
 10. [아키텍처 그림을 읽는 순서](docs/10-architecture.md)
+11. [Keycloak 설정을 직접 따라 읽는 핸즈온 보고서](docs/11-keycloak-hands-on-report.md)
+12. [Keycloak 현재 설정값 목록과 확인 기록](docs/12-keycloak-settings-reference.md)
 
 ## 실습 범위
 
