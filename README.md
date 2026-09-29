@@ -4,6 +4,10 @@
 
 Keycloak에서 발급받은 액세스 토큰을 APISIX가 검사하고 전달합니다. FinAccess와 FinAdmin도 각각 토큰을 다시 검증하고, 자기 앱의 역할과 업무 규칙에 따라 응답합니다.
 
+![FinLab 인증·인가 아키텍처](docs/images/finlab-architecture.png)
+
+[아키텍처 그림을 읽는 순서](docs/10-architecture.md) · [PNG 원본](docs/images/finlab-architecture.png)
+
 ```text
 브라우저 ── 로그인(Code + PKCE) ── Keycloak
 브라우저 ── Bearer 액세스 토큰 ── APISIX
@@ -146,6 +150,7 @@ FinAdmin만 Java로 읽어 보려면 `./gradlew bootRun`도 가능합니다. 이
 7. [APISIX Gateway의 검증과 전달](docs/07-apisix-gateway.md)
 8. [전체 흐름의 검증 결과와 재현 방법](docs/08-end-to-end-verification.md)
 9. [회사 내부 공유 문서](docs/09-internal-sharing.md)
+10. [아키텍처 그림을 읽는 순서](docs/10-architecture.md)
 
 ## 실습 범위
 

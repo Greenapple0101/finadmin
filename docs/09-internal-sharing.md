@@ -22,6 +22,10 @@ Keycloak 로그인 연동을 실제 API 사용 흐름까지 확장하여, Gatewa
 
 ## 구성
 
+![FinLab 인증·인가 아키텍처](images/finlab-architecture.png)
+
+[그림을 읽는 순서](10-architecture.md)
+
 ```text
 프런트 ── Authorization Code + PKCE ── Keycloak
 프런트 ── 액세스 토큰 ── Apache APISIX
