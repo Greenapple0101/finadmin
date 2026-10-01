@@ -1,5 +1,7 @@
 # FinLab 인증·인가 아키텍처
 
+> 이 그림과 본문은 2026-09-29의 LDAP 추가 전 구조입니다. 2026-10-01에 Keycloak → OpenLDAP 연결을 추가했습니다. 현재 외부 직원 로그인·그룹·역할 흐름은 [LDAP 실습 보고서](13-ldap-federation-hands-on.md)를 함께 읽으세요.
+
 ![FinLab 인증·인가 아키텍처](images/finlab-architecture.png)
 
 2026-09-29의 `compose.yaml`, APISIX 경로 설정, 프런트 로그인 코드, 두 Spring 앱의 보안 설정을 기준으로 만든 그림입니다.

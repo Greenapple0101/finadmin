@@ -1,5 +1,7 @@
 # Keycloak 설정을 직접 따라 읽는 FinLab 실습 보고서
 
+> **2026-10-01 추가:** 아래 본문은 2026-09-29의 내부 계정 실습 기록입니다. 이후 OpenLDAP User Federation, LDAP 직원 4명, `/ldap` 그룹과 Client Role 연결을 추가했습니다. 아래의 “User federation 없음” 등 당시 상태와 현재 확장을 구분하고, [13번 LDAP 핸즈온 보고서](13-ldap-federation-hands-on.md)를 이어서 읽으세요.
+
 > **이 문서의 목표:** 콘솔의 설정을 보면서 “이걸 왜 만들었고, 토큰의 어느 부분을 바꾸며, 어느 코드가 사용하는지” 설명할 수 있게 되기.
 >
 > **대상:** Spring·OAuth·OIDC를 처음 배우는 개발자. 현재 실행 중인 `finlab` Realm을 기준으로 설명합니다.

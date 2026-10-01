@@ -1,9 +1,11 @@
 # Keycloak · Apache APISIX · Spring Resource Server 인증·인가 검증
 
-작성일: 2026-09-29
+작성일: 2026-09-29 · LDAP 확장 업데이트: 2026-10-01
 저장소: [FinAccess](https://github.com/Greenapple0101/finaccess), [FinAdmin](https://github.com/Greenapple0101/finadmin)
 
 학습 자료: [Keycloak 콘솔 핸즈온 보고서](11-keycloak-hands-on-report.md) · [현재 설정값과 추가 확인 결과](12-keycloak-settings-reference.md)
+
+추가 자료: [OpenLDAP User Federation 설정·역할 연결·검증 보고서](13-ldap-federation-hands-on.md)
 
 ## 진행 목적
 
@@ -21,15 +23,19 @@ Keycloak 로그인 연동을 실제 API 사용 흐름까지 확장하여, Gatewa
 | Keycloak 역할에 따라 관리자 데이터 제한 | Client별 역할을 토큰에 넣고 FinAdmin admin만 관리자 API 허용 |
 | 발급된 토큰을 실제 업무에 사용 | FinAccess에서 검증된 iss + sub를 업무 사용자에 연결하여 요청·승인·실행 처리 |
 | 정상 로그인 외 실패 사례 확인 | 토큰 누락·변조·만료·미래 사용 시각·대상 불일치·역할 부족·회사 불일치 검사 |
+| 외부 기업 명부 연동 | OpenLDAP 직원 4명을 조회 전용 User Federation으로 연결 |
+| 조직 그룹에 따른 권한 | LDAP 그룹 → Keycloak 그룹 → 앱별 Client Role → JWT 연결 |
+| 권한 변경의 실제 반영 범위 | 그룹 제거 후 새 로그인은 403, 기존 미만료 JWT는 200 유지 확인 |
 
 ## 구성
 
 ![FinLab 인증·인가 아키텍처](images/finlab-architecture.png)
 
-[그림을 읽는 순서](10-architecture.md)
+[그림을 읽는 순서](10-architecture.md). 이 PNG는 2026-09-29의 LDAP 추가 전 구조입니다. 현재 Keycloak에는 아래 OpenLDAP 연결이 추가됐습니다.
 
 ```text
 프런트 ── Authorization Code + PKCE ── Keycloak
+                                        └── OpenLDAP: 외부 직원 비밀번호·그룹 조회
 프런트 ── 액세스 토큰 ── Apache APISIX
                            ├── FinAccess: JWT → 앱 역할 → 회사·계좌·이체 규칙
                            └── FinAdmin: JWT → 앱 관리자 역할 → 관리자 샘플 응답
@@ -38,6 +44,7 @@ Keycloak 로그인 연동을 실제 API 사용 흐름까지 확장하여, Gatewa
 | 구성 요소 | 역할 |
 | --- | --- |
 | Keycloak 26.7.4 | 사용자 로그인, 앱별 역할, 토큰 발급 |
+| OpenLDAP 2.6.10 | 외부 직원 명부·비밀번호·그룹 소속의 원본 |
 | Apache APISIX 3.18.0 | standalone 파일 설정으로 API 라우팅·JWT 검증·토큰 전달 |
 | FinAccess | 회사·계좌·이체 API와 업무 데이터 접근 제한 |
 | FinAdmin | 독립적인 JWT 검증과 관리자 API 역할 제한 |
@@ -72,6 +79,14 @@ FinAccess의 요청자·승인자·실행자는 본문에서 받은 ID 대신 �
 
 검증 결과에서도 이체 요청자, 승인자, 실행자가 해당 로그인 사용자의 업무 ID로 기록되는지 확인했습니다. 실습 사용자 등록 및 업무 DB 연결은 검증 스크립트가 준비하며, 일반 사용자 프로비저닝 API는 아직 없습니다.
 
+### 5. LDAP 외부 사용자와 그룹 연동
+
+`finlab-openldap` Provider를 READ_ONLY로 구성하고, 조회 전용 Bind 계정으로 직원과 그룹을 검색합니다. 조회 계정은 비밀번호 해시 조회나 직원 수정이 불가능함을 실제 LDAP 요청으로 확인했습니다. 사용자 프로필은 Keycloak으로 가져오지만 LDAP 비밀번호는 Keycloak DB로 복사하지 않습니다.
+
+LDAP의 developers·approvers·admins를 Keycloak `/ldap` 아래 그룹으로 연결하고, 각 그룹에 `finaccess-api`와 `finadmin-api` Client Role을 매핑했습니다. 직원 개인에 직접 역할을 붙이지 않고 그룹에서 상속한 역할이 JWT에 들어가는지 검증했습니다. 기존 JWT 형식을 유지하므로 APISIX와 Spring 보안 코드는 변경하지 않았습니다.
+
+`ldap-alice`의 요청을 `ldap-bob`이 승인·실행하는 모의 이체와 다른 회사 직원의 요청 차단까지 확인했습니다. `ldap-admin`의 그룹 소속을 제거하면 새 로그인 토큰은 관리자 API에서 403이 되지만 기존 미만료 토큰은 200을 유지했습니다. 검사 후 그룹을 복원하고 새 토큰의 200도 확인했습니다.
+
 ## 검증 결과
 
 | 구분 | 결과 |
@@ -79,8 +94,12 @@ FinAccess의 요청자·승인자·실행자는 본문에서 받은 ID 대신 �
 | FinAccess Java 테스트 | 149개 통과 |
 | FinAdmin Java 테스트 | 19개 통과 |
 | 실제 서버 간 HTTP 결과 검사 | 46개 통과 |
+| LDAP 인증·ACL·그룹·JWT·업무 추가 검사 | 93개 통과 |
+| LDAP 재시작·설정 재실행 | 기존 Provider·Mapper·그룹·직원 ID 유지 |
 | 모의 이체 DB 확인 | 1,000원 이체 후 출금 9,000원·입금 1,000원 |
 | 실제 브라우저 | alice의 내 정보 200·관리자 요약 403, 로그아웃 후 admin의 관리자 요약 200 |
+
+기존 Java 테스트와 내부 계정 브라우저 기록은 2026-09-29 결과입니다. 2026-10-01 LDAP 추가 후 실제 서버 46개 검사와 LDAP 추가 93개 검사를 실행했습니다. LDAP 로그인의 Code + PKCE 흐름은 Python HTTP 클라이언트로 실제 Keycloak 로그인 폼·코드 교환을 수행하여 확인했습니다.
 
 대표 결과는 다음과 같습니다.
 
@@ -107,6 +126,8 @@ Gateway 경로 응답 헤더만으로 백엔드 도달을 판단하지 않고, A
 4. 로그아웃 후 admin으로 로그인하여 같은 API의 200을 확인합니다.
 5. 토큰 없는 요청의 401을 확인합니다.
 6. 자동 검증 결과에서 잘못된 토큰·회사 불일치·처리자 위조·모의 이체 잔액을 확인합니다.
+7. `ldap-alice`와 `ldap-admin`도 같은 로그인 화면으로 비교합니다.
+8. Keycloak의 User federation → Mappers → Groups의 Client Role 순서로 권한의 출처를 설명합니다.
 
 로컬 진입점은 `http://localhost:18090/`, Keycloak 관리 화면은 `http://localhost:18080/admin/`입니다. 비밀번호는 Git에서 제외한 실행용 `.env`와 데스크탑 인증 문서에, 발급한 실습 토큰은 데스크탑 인증 문서에 보관합니다. 공유 문서에는 실제 비밀값을 포함하지 않습니다.
 
@@ -117,6 +138,7 @@ Gateway 경로 응답 헤더만으로 백엔드 도달을 판단하지 않고, A
 - FinAdmin 관리자 통계는 고정 샘플이며 실제 FinAccess 집계 기능이 아닙니다.
 - 실제 금융망 이체가 아니라 로컬 실습 DB에서 처리하는 모의 내부 이체입니다.
 - 이미 발급된 JWT의 역할 변경·로그아웃을 즉시 반영하는 폐기 정책은 별도로 설계해야 합니다.
+- LDAP는 Docker 내부 평문 통신이며 운영용 StartTLS/LDAPS, Windows AD, 입·퇴사 자동 처리까지 구현한 것은 아닙니다.
 - SSO 시연, Istio, 대규모 부하 시험, 고가용성·장애 복구 검증은 이번 범위에 포함하지 않았습니다.
 
 ## 관련 자료
@@ -132,4 +154,4 @@ Gateway 경로 응답 헤더만으로 백엔드 도달을 판단하지 않고, A
 
 ### 회의에서 설명할 내용
 
-> Keycloak에서 발급한 액세스 토큰을 APISIX Gateway와 독립적인 Spring 백엔드 두 개에서 각각 검증하는 구성을 만들었습니다. 앱별 역할에 따른 관리자 API 제한과 회사별 데이터 접근을 적용했고, 토큰의 사용자 신원을 실제 이체 요청·승인·실행 처리자와 연결했습니다. 실제 로그인과 46개 HTTP 결과 검사, DB 잔액 확인까지 완료했으며 현재는 로컬 인증·인가 기능 검증 범위입니다.
+> Keycloak과 OpenLDAP을 User Federation으로 연동하고, 직원 그룹이 앱별 Client Role과 JWT 권한으로 이어지도록 구성했습니다. APISIX와 독립적인 Spring 백엔드 두 개에서 JWT를 검증하며, 외부 직원 계정으로 회사 접근 제한과 모의 이체까지 확인했습니다. 기존 46개 HTTP 검사와 LDAP 추가 93개 검사를 통과했고, 그룹 변경이 새 토큰에는 반영되지만 이미 발급된 JWT를 즉시 무효화하지는 않는다는 점도 검증했습니다.
