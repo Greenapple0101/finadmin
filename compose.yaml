@@ -3,6 +3,26 @@
 # 기존 finaccess 개발 DB와 다른 저장 공간이므로 기존 데이터를 건드리지 않습니다.
 name: finlab
 services:
+  # 직원 명부와 비밀번호의 원본입니다. Keycloak은 이 서버에 조회·로그인을 요청합니다.
+  # 호스트 포트를 열지 않아서 Docker 내부의 ldap:389로만 접근합니다.
+  ldap:
+    build: ./infra/ldap
+    environment:
+      LDAP_ADMIN_PASSWORD: ${LDAP_ADMIN_PASSWORD:?Run scripts/init-local.py first}
+      LDAP_BIND_PASSWORD: ${LDAP_BIND_PASSWORD:?Run scripts/init-local.py first}
+      LDAP_ALICE_PASSWORD: ${LDAP_ALICE_PASSWORD}
+      LDAP_BOB_PASSWORD: ${LDAP_BOB_PASSWORD}
+      LDAP_ADMIN_USER_PASSWORD: ${LDAP_ADMIN_USER_PASSWORD}
+      LDAP_OUTSIDER_PASSWORD: ${LDAP_OUTSIDER_PASSWORD}
+    volumes:
+      - ldap_data:/var/lib/ldap
+    tmpfs: [/run]
+    healthcheck:
+      test: [CMD, ldapsearch, -x, -H, 'ldap://localhost:389', -b, '', -s, base, namingContexts]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
   keycloak-db:
     image: postgres:17.11-bookworm
     environment:
@@ -100,5 +120,6 @@ services:
     depends_on: [keycloak, finaccess, finadmin, web]
 
 volumes:
+  ldap_data:
   keycloak_data:
   app_data:

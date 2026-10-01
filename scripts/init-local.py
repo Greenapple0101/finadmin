@@ -9,7 +9,9 @@ ROOT = Path(__file__).resolve().parents[1]
 ENV = ROOT / '.env'
 DESKTOP = Path.home() / 'Desktop' / 'finadmin-local-secrets.md'
 KEYS = ('KEYCLOAK_DB_PASSWORD', 'KEYCLOAK_ADMIN_PASSWORD', 'APP_DB_PASSWORD',
-        'LAB_ALICE_PASSWORD', 'LAB_BOB_PASSWORD', 'LAB_ADMIN_PASSWORD', 'LAB_OUTSIDER_PASSWORD')
+        'LAB_ALICE_PASSWORD', 'LAB_BOB_PASSWORD', 'LAB_ADMIN_PASSWORD', 'LAB_OUTSIDER_PASSWORD',
+        'LDAP_ADMIN_PASSWORD', 'LDAP_BIND_PASSWORD', 'LDAP_ALICE_PASSWORD',
+        'LDAP_BOB_PASSWORD', 'LDAP_ADMIN_USER_PASSWORD', 'LDAP_OUTSIDER_PASSWORD')
 
 
 def read_env():
@@ -48,7 +50,13 @@ def main():
               'KEYCLOAK_DB_PASSWORD': 'Keycloak DB', 'APP_DB_PASSWORD': 'FinAccess 실습 DB',
               'LAB_ALICE_PASSWORD': 'alice (A회사 담당자)', 'LAB_BOB_PASSWORD': 'bob (A회사 결재자)',
               'LAB_ADMIN_PASSWORD': 'admin (A회사 / 앱 관리자)',
-              'LAB_OUTSIDER_PASSWORD': 'outsider (B회사 담당자)'}
+              'LAB_OUTSIDER_PASSWORD': 'outsider (B회사 담당자)',
+              'LDAP_ADMIN_PASSWORD': 'cn=admin,dc=finlab,dc=com (LDAP 관리 전용)',
+              'LDAP_BIND_PASSWORD': 'cn=keycloak,ou=services,dc=finlab,dc=com (조회 전용)',
+              'LDAP_ALICE_PASSWORD': 'ldap-alice (LDAP / A회사 담당자)',
+              'LDAP_BOB_PASSWORD': 'ldap-bob (LDAP / A회사 결재자)',
+              'LDAP_ADMIN_USER_PASSWORD': 'ldap-admin (LDAP / A회사 앱 관리자)',
+              'LDAP_OUTSIDER_PASSWORD': 'ldap-outsider (LDAP / B회사 담당자)'}
     block += ['| ' + labels[key] + ' | `' + values[key] + '` |' for key in KEYS]
     block += ['', '서버 최초 생성에 사용한 값입니다. .env 변경만으로 이미 저장된 계정 비밀번호가 바뀌지 않습니다.', end]
     replacement = '\n'.join(block)
