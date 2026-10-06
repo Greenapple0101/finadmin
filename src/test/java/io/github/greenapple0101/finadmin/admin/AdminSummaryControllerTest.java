@@ -17,10 +17,14 @@ import com.nimbusds.jwt.SignedJWT;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -34,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -69,7 +74,8 @@ class AdminSummaryControllerTest {
     @Test
     void missingTokenIsUnauthorized() throws Exception {
         mockMvc.perform(get("/api/admin/summary"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("X-Finlab-Backend", "finadmin"));
     }
 
     @Test
@@ -147,7 +153,8 @@ class AdminSummaryControllerTest {
     @Test
     void ordinaryUserCannotReadAdminData() throws Exception {
         mockMvc.perform(get("/api/admin/summary").header(HttpHeaders.AUTHORIZATION, bearer(claims("user"))))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(header().string("X-Finlab-Backend", "finadmin"));
     }
 
     @Test
@@ -185,8 +192,10 @@ class AdminSummaryControllerTest {
 
     @Test
     void adminReceivesClearlyMarkedSampleSummaryAsJsonWithoutSessionCookie() throws Exception {
-        mockMvc.perform(get("/api/admin/summary").header(HttpHeaders.AUTHORIZATION, bearer(claims("admin"))))
+        mockMvc.perform(get("/api/admin/summary").header(HttpHeaders.AUTHORIZATION, bearer(claims("admin")))
+                        .header("X-Finlab-Backend", "attacker-chosen-name"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("X-Finlab-Backend", "finadmin"))
                 .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""
@@ -225,8 +234,45 @@ class AdminSummaryControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"user", "admin"})
+    void eitherApplicationRoleCanReadOwnIdentity(String role) throws Exception {
+        // 관리자는 user 역할이 없어도 내 정보를 읽을 수 있습니다.
+        mockMvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(claims(role))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.roles[0]").value(role));
+    }
+
+    @Test
+    void allProtectedReadsRejectMissingUnknownOrMalformedApplicationRoles() throws Exception {
+        Object[] invalidClaims = {null, Map.of(), Map.of("finadmin-api", Map.of("roles", List.of())),
+                Map.of("finadmin-api", Map.of("roles", List.of("approver"))),
+                Map.of("finadmin-api", Map.of("roles", "admin")),
+                Map.of("finadmin-api", Map.of("roles", List.of(123))),
+                Map.of("finaccess-api", Map.of("roles", List.of("admin")))};
+        for (Object resourceAccess : invalidClaims) {
+            String token = bearer(claims("user").claim("resource_access", resourceAccess)
+                    .claim("realm_access", Map.of("roles", List.of("admin"))));
+            for (String path : List.of("/api/me", "/api/admin/summary")) {
+                mockMvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, token)).andExpect(status().isForbidden());
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "POST, /api/admin/summary", "HEAD, /api/admin/summary", "OPTIONS, /api/admin/summary",
+            "GET, /api/admin/summary/extra", "GET, /api/admin/new-endpoint", "GET, /api/unknown",
+            "POST, /api/me", "HEAD, /api/me", "DELETE, /api/hello", "GET, /error"
+    })
+    void evenAdminCannotUseUnlistedMethodsOrPaths(String method, String path) throws Exception {
+        // 관리자라도 등록하지 않은 주소나 메서드를 자동으로 쓸 수 없게 막습니다.
+        mockMvc.perform(request(HttpMethod.valueOf(method), path).header(HttpHeaders.AUTHORIZATION, bearer(claims("admin"))))
+                .andExpect(status().isForbidden())
+                .andExpect(header().string("X-Finlab-Backend", "finadmin"));
+    }
+
     // 여기서부터는 여러 테스트가 함께 사용하는 준비 도구입니다.
-    // claimsはJWTの中身です。通常はKeycloakが作りますが、ここでは失敗例も作るため自分で組み立てます。
+    // claims는 JWT 안의 정보입니다. 실패 사례도 시험하려고 여기서는 테스트 코드가 직접 만듭니다.
     private JWTClaimsSet.Builder claims(String role) {
         Instant now = Instant.now();
         return new JWTClaimsSet.Builder()

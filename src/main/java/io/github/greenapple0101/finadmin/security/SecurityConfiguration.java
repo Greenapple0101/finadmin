@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 import java.util.List;
 import java.time.Instant;
@@ -35,6 +36,9 @@ public class SecurityConfiguration {
         authenticationConverter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
 
         http
+                // 이 응답이 FinAdmin까지 도착한 요청의 결과인지 구분하는 고정 이름표입니다.
+                // 401·403에도 붙습니다. 요청 헤더를 복사하지 않으며, 인증 수단으로 쓰지 않습니다.
+                .headers(headers -> headers.addHeaderWriter(new StaticHeadersWriter("X-Finlab-Backend", "finadmin")))
                 // 이 API는 쿠키로 로그인하지 않고 매 요청의 Authorization 헤더로 인증합니다.
                 // 브라우저가 자동 전송하는 로그인 쿠키를 쓰지 않으므로 여기서는 CSRF 검사를 끕니다.
                 // 나중에 쿠키 로그인 기능을 넣는다면 이 선택도 다시 검토해야 합니다.
@@ -46,9 +50,14 @@ public class SecurityConfiguration {
                         // 외부에서 /error 주소로 처음 들어오는 요청을 공개한다는 뜻은 아닙니다.
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/hello").permitAll()
+                        // 이 앱의 역할이 없는 토큰은 로그인 자체가 유효해도 내 정보 API를 사용할 수 없습니다.
+                        // 관리자는 user 역할이 없어도 접근할 수 있게 '둘 중 하나'를 확인합니다.
+                        .requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("user", "admin")
                         // hasRole("admin")은 ROLE_admin이라는 권한이 있는지 확인합니다.
-                        .requestMatchers("/api/admin/**").hasRole("admin")
-                        .anyRequest().authenticated())
+                        // 주소뿐 아니라 HTTP 메서드도 정합니다. 같은 주소의 POST까지 열지는 않습니다.
+                        .requestMatchers(HttpMethod.GET, "/api/admin/summary").hasRole("admin")
+                        // 새 API는 여기와 Gateway에 허용 규칙을 추가해야 사용할 수 있습니다.
+                        .anyRequest().denyAll())
                 // oauth2ResourceServer는 토큰을 발급하는 기능이 아니라 받은 토큰을 검사하는 기능입니다.
                 .oauth2ResourceServer(resourceServer -> resourceServer
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)));
