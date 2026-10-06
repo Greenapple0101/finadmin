@@ -25,7 +25,8 @@ CHECKS = []
 STARTED = datetime.now(timezone.utc)
 LEGACY = GATEWAY + '/legacy'
 APIS = ('finaccess-api', 'finadmin-api', 'finlegacy-api')
-REPORT_PATH = ROOT / '.local/gateway-rbac-verification.json'
+REPORT_PATH = ROOT / '.local/api7-verification.json'
+GATEWAY_CONTAINER = 'finlab-api7-gateway'
 
 
 def record(name, passed, **details):
@@ -89,8 +90,8 @@ def docker(*arguments, timeout=30):
 
 
 def network_checks():
-    ids = {name: docker('compose', 'ps', '-q', name).strip() for name in ('legacy', 'apisix', 'web')}
-    record('network: three expected services are running', all(ids.values()))
+    ids = {name: docker('compose', 'ps', '-q', name).strip() for name in ('legacy', 'web')}
+    record('network: legacy and web services are running', all(ids.values()))
     info = {name: json.loads(docker('inspect', container))[0] for name, container in ids.items()}
     legacy = info['legacy']
     # EXPOSE와 호스트 포트 공개는 다릅니다. PortBindings가 비어 있는지 확인합니다.
@@ -101,16 +102,15 @@ def network_checks():
     record('network: legacy belongs to one isolated network', len(networks) == 1)
     network_name, address = next(iter(networks.items()))
     network = json.loads(docker('network', 'inspect', network_name))[0]
-    allowed = {ids['legacy'], ids['apisix']}
-    # API7도 같은 신뢰 경계를 사용합니다. 이름뿐 아니라 Compose 소유와 서비스 라벨을 확인합니다.
     enterprise_ids = docker('ps', '-q', '--filter', 'name=^/finlab-api7-gateway$').strip()
-    if enterprise_ids:
-        enterprise = json.loads(docker('inspect', enterprise_ids))[0]
-        labels = enterprise['Config']['Labels']
-        record('network: Enterprise gateway has expected Compose ownership',
-               labels.get('com.docker.compose.project') == 'finlab-api7'
-               and labels.get('com.docker.compose.service') == 'gateway')
-        allowed.add(enterprise['Id'])
+    record('network: API7 Enterprise is the only FinLab gateway',
+           bool(enterprise_ids) and not docker('ps', '-aq', '--filter', 'name=^/finlab-apisix-1$').strip())
+    enterprise = json.loads(docker('inspect', enterprise_ids))[0]
+    labels = enterprise['Config']['Labels']
+    record('network: Enterprise gateway has expected Compose ownership',
+           labels.get('com.docker.compose.project') == 'finlab-api7'
+           and labels.get('com.docker.compose.service') == 'gateway')
+    allowed = {ids['legacy'], enterprise['Id']}
     record('network: private network is internal and has only gateway plus legacy',
            network.get('Internal') is True and set(network.get('Containers', {})) == allowed)
     record('network: web is outside the private network',
@@ -354,21 +354,15 @@ def access_log_checks(token):
 
 
 def main():
-    global GATEWAY, LEGACY, REPORT_PATH, GATEWAY_CONTAINER
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--enterprise', action='store_true', help='API7 Enterprise 18091 검사')
-    args = parser.parse_args()
-    GATEWAY_CONTAINER = 'finlab-api7-gateway' if args.enterprise else 'finlab-apisix-1'
-    if args.enterprise:
-        GATEWAY = 'http://localhost:18091'
-        LEGACY = GATEWAY + '/legacy'
-        REPORT_PATH = ROOT / '.local/api7-verification.json'
+    # 이전 명령도 동작하지만, 이제 옵션 없이도 Enterprise만 검사합니다.
+    parser.add_argument('--enterprise', action='store_true', help=argparse.SUPPRESS)
+    parser.parse_args()
     completed = False
-    config_paths = ('compose.yaml', 'infra/apisix/config.yaml', 'infra/apisix/apisix.yaml',
-                    'infra/keycloak/finlab-realm.json', 'infra/gateway/rbac.lua')
-    if args.enterprise:
-        config_paths += ('compose.api7.yaml', 'infra/api7/config.yaml', 'scripts/setup-api7.py',
-                         'infra/gateway/enterprise-identity.lua', 'infra/gateway/policies.json')
+    config_paths = ('compose.yaml', 'compose.api7.yaml', 'infra/api7/config.yaml',
+                    'infra/keycloak/finlab-realm.json', 'scripts/setup-api7.py',
+                    'infra/gateway/enterprise-identity.lua', 'infra/gateway/token-shape.lua',
+                    'infra/gateway/policies.json')
     configuration = {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in config_paths}
     try:
         values = read_values()
@@ -378,8 +372,7 @@ def main():
         print('준비된 로컬 환경에서 PKCE 로그인과 Gateway RBAC 검증을 시작합니다.', flush=True)
         tokens = {name: login(name, values['LAB_' + name.upper() + '_PASSWORD'])
                   for name in ('alice', 'bob', 'admin', 'outsider')}
-        if args.enterprise:
-            native_acl_checks(tokens)
+        native_acl_checks(tokens)
         short_lived, endpoints = token_checks(values, tokens)
         role_and_method_checks(tokens)
         forged_header_checks(tokens)
@@ -407,7 +400,7 @@ def main():
                   'passed': sum(c['passed'] for c in CHECKS),
                   'failed': sum(not c['passed'] for c in CHECKS), 'checks': CHECKS,
                   'configurationSha256': configuration,
-                  'notCoveredHere': ['잘못된 issuer의 유효 서명 토큰: 별도 격리 fixture에서 검증'],
+                  'notCoveredHere': ['Enterprise의 동일 키·잘못된 issuer 독립 검사 미실행. 과거 OSS 격리 검사와 구분.'],
                   'note': '실제 PKCE 로그인. 업무 데이터 생성 없음. LDAP 그룹은 finally에서 복원. 비밀번호·토큰 원문 없음.'}
         REPORT_PATH.write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(f'완료: {len(CHECKS)}개 검증. {REPORT_PATH.name}에 비밀값 없는 결과를 저장했습니다.')

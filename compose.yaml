@@ -106,6 +106,7 @@ services:
     ports: ["127.0.0.1:18083:8081"]
 
   web:
+    # 로그인은 Keycloak이 처리합니다. 이 컨테이너는 사용자용 HTML·JS만 제공합니다.
     image: nginx:1.28-alpine
     volumes:
       - ./frontend:/usr/share/nginx/html:ro
@@ -118,16 +119,6 @@ services:
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-
-  apisix:
-    image: apache/apisix:3.18.0-debian
-    ports: ["127.0.0.1:18090:9080"]
-    volumes:
-      - ./infra/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
-      - ./infra/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
-    # Gateway만 일반 앱 네트워크와 레거시 전용 네트워크 양쪽에 연결합니다.
-    networks: [default, legacy_private]
-    depends_on: [keycloak, finaccess, finadmin, web, legacy]
 
 volumes:
   ldap_data:

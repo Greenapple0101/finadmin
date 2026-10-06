@@ -1,10 +1,9 @@
-// [이 파일이 하는 일] Keycloak 로그인 → 토큰 받기 → APISIX를 통해 API 호출 순서로 동작합니다.
+// [이 파일이 하는 일] Keycloak 로그인 → 토큰 받기 → API7 Enterprise를 통해 API 호출 순서로 동작합니다.
 // 액세스 토큰은 메모리에만 둡니다. 새로고침하면 다시 로그인해야 하며 localStorage에 저장하지 않습니다.
-// API 허용 여부는 화면 버튼이 아니라 APISIX와 Spring 백엔드가 결정합니다.
+// API 허용 여부는 화면 버튼이 아니라 API7 Enterprise와 Spring 백엔드가 결정합니다.
 const issuer = "http://localhost:18080/realms/finlab";
 const clientId = "finlab-web";
-// 같은 화면을 OSS(18090)와 Enterprise(18091)에서 비교합니다.
-// 허용한 두 주소는 Keycloak Client에도 정확히 등록되어 있어야 합니다.
+// API7 Enterprise의 18090 화면으로 돌아옵니다. 이 주소를 Keycloak Client에도 등록합니다.
 const redirectUri = window.location.origin + "/";
 let accessToken = null;
 let expiresAt = 0;

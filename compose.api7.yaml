@@ -1,13 +1,13 @@
 # 기존 API7 Control Plane과 FinLab 앱이 실행된 다음 사용하는 별도 DP입니다.
 # 실행: python3 scripts/setup-api7.py --apply --start
-# OSS Gateway 18090과 기존 API7 default 그룹은 비교 대상으로 유지합니다.
+# FinLab의 유일한 Gateway입니다. 기존 API7 default 그룹은 FinLab 외의 별도 설치입니다.
 name: finlab-api7
 services:
   gateway:
     image: api7/api7-ee-3-gateway:3.10.2
     container_name: finlab-api7-gateway
     env_file: ./.local/api7/gateway.env
-    ports: ["127.0.0.1:18091:9080"]
+    ports: ["127.0.0.1:18090:9080"]
     volumes:
       - ./infra/api7/config.yaml:/usr/local/apisix/conf/config.yaml:ro
       - ./.local/api7/apisix.uid:/usr/local/apisix/conf/apisix.uid

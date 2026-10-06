@@ -75,16 +75,14 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/",
-        "http://localhost:18091/"
+        "http://localhost:18090/"
       ],
       "webOrigins": [
-        "http://localhost:18090",
-        "http://localhost:18091"
+        "http://localhost:18090"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/"
+        "post.logout.redirect.uris": "http://localhost:18090/"
       },
       "defaultClientScopes": [
         "basic",
@@ -180,16 +178,14 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/",
-        "http://localhost:18091/"
+        "http://localhost:18090/"
       ],
       "webOrigins": [
-        "http://localhost:18090",
-        "http://localhost:18091"
+        "http://localhost:18090"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/"
+        "post.logout.redirect.uris": "http://localhost:18090/"
       },
       "defaultClientScopes": [
         "basic",
@@ -249,16 +245,14 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/",
-        "http://localhost:18091/"
+        "http://localhost:18090/"
       ],
       "webOrigins": [
-        "http://localhost:18090",
-        "http://localhost:18091"
+        "http://localhost:18090"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/",
+        "post.logout.redirect.uris": "http://localhost:18090/",
         "access.token.lifespan": "2"
       },
       "defaultClientScopes": [
@@ -355,16 +349,14 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/",
-        "http://localhost:18091/"
+        "http://localhost:18090/"
       ],
       "webOrigins": [
-        "http://localhost:18090",
-        "http://localhost:18091"
+        "http://localhost:18090"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/"
+        "post.logout.redirect.uris": "http://localhost:18090/"
       },
       "defaultClientScopes": [
         "basic",
@@ -472,16 +464,14 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/",
-        "http://localhost:18091/"
+        "http://localhost:18090/"
       ],
       "webOrigins": [
-        "http://localhost:18090",
-        "http://localhost:18091"
+        "http://localhost:18090"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/"
+        "post.logout.redirect.uris": "http://localhost:18090/"
       },
       "defaultClientScopes": [
         "basic",

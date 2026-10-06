@@ -8,7 +8,6 @@
 import argparse
 import base64
 import http.client
-import importlib.util
 import json
 import copy
 import re
@@ -44,29 +43,37 @@ def call(method, path, payload=None):
 
 
 def desired():
-    spec = importlib.util.spec_from_file_location('render_gateway', ROOT / 'scripts/render-gateway.py')
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
     policies = json.loads((ROOT / 'infra/gateway/policies.json').read_text())
     identity = (ROOT / 'infra/gateway/enterprise-identity.lua').read_text()
     services, routes = [], []
-    for source in module.configuration()['routes']:
-        name = 'finlab-' + source['id']
-        nodes = []
-        for address, weight in source['upstream']['nodes'].items():
-            host, port = address.rsplit(':', 1)
-            nodes.append({'host': host, 'port': int(port), 'weight': weight})
+    for app, policy in policies.items():
+        name = 'finlab-' + app + '-api'
+        host, port = policy['upstream'].rsplit(':', 1)
+        nodes = [{'host': host, 'port': int(port), 'weight': 1}]
         services.append((name, {'name': name, 'upstream': {'type': 'roundrobin', 'scheme': 'http', 'nodes': nodes}}))
-        plugins = source['plugins']
-        plugins['response-rewrite']['headers']['set']['X-Finlab-Gateway'] = 'api7-enterprise'
+        # 제품 설정을 정책표에서 직접 만듭니다. OSS APISIX 설정을 거쳐 변환하지 않습니다.
+        plugins = {
+            'serverless-pre-function': {'phase': 'rewrite', 'functions': [
+                (ROOT / 'infra/gateway/token-shape.lua').read_text()]},
+            'openid-connect': {
+                'client_id': policy['audience'],
+                'discovery': 'http://keycloak:8080/realms/finlab/.well-known/openid-configuration',
+                'bearer_only': True, 'use_jwks': True, 'unauth_action': 'deny',
+                'token_signing_alg_values_expected': 'RS256', 'accept_none_alg': False,
+                'accept_unsupported_alg': False, 'iat_slack': 0,
+                'set_access_token_header': True, 'access_token_in_authorization_header': True,
+                'set_id_token_header': False, 'set_raw_id_token_header': False,
+                'set_userinfo_header': False, 'set_refresh_token_header': False,
+                'claim_validator': {
+                    'issuer': {'valid_issuers': ['http://localhost:18080/realms/finlab']},
+                    'audience': {'claim': 'aud', 'required': True, 'match_with_client_id': True}}},
+            'serverless-post-function': {'phase': 'rewrite', 'functions': [identity.replace(
+                '__AUDIENCE__', policy['audience']).replace('__LEGACY__', str(app == 'legacy').lower())]},
+            'proxy-rewrite': {'regex_uri': ['^' + policy['prefix'] + '/(.*)$', '/$1']},
+            'response-rewrite': {'headers': {'set': {
+                'X-Finlab-Gateway': 'api7-enterprise', 'X-Finlab-Upstream': app}}}}
         routes.append((name, {'name': name, 'service_id': name,
-            'paths': source.get('uris', [source.get('uri')]), 'priority': source['priority'], 'plugins': plugins}))
-        app = source['id'].removesuffix('-api')
-        if app not in policies:
-            continue  # 로그인 전에도 화면 파일은 읽을 수 있습니다.
-        policy = policies[app]
-        plugins['serverless-post-function']['functions'] = [identity.replace(
-            '__AUDIENCE__', policy['audience']).replace('__LEGACY__', str(app == 'legacy').lower())]
+            'paths': [policy['prefix'], policy['prefix'] + '/*'], 'priority': 100, 'plugins': plugins}))
         # 넓은 /admin/* Route는 표에 없는 요청을 막는 안전망으로만 남깁니다.
         # OIDC rewrite 이후 access 단계에서 실행되므로 토큰 없는 요청은 먼저 401입니다.
         plugins['fault-injection'] = {'abort': {'http_status': 403,
@@ -88,6 +95,12 @@ def desired():
                 'paths': [path.split('{id}')[0] + '*' if '{id}' in path else path],
                 'methods': [rule['method']], 'vars': [['real_request_uri', '~~', pattern]],
                 'priority': 200, 'plugins': selected}))
+    # Keycloak 로그인 버튼과 API 호출 화면입니다. 인증 서버나 Gateway 관리 UI가 아닙니다.
+    services.append(('finlab-frontend', {'name': 'finlab-frontend', 'upstream': {
+        'type': 'roundrobin', 'scheme': 'http', 'nodes': [{'host': 'web', 'port': 80, 'weight': 1}]}}))
+    routes.append(('finlab-frontend', {'name': 'finlab-frontend', 'service_id': 'finlab-frontend',
+        'paths': ['/*'], 'priority': 0, 'plugins': {'response-rewrite': {
+            'headers': {'set': {'X-Finlab-Gateway': 'api7-enterprise'}}}}}))
     return services, routes
 
 
@@ -121,7 +134,7 @@ def main():
     manifest.write_text(json.dumps(sorted(current)))
     if args.start:
         subprocess.run(['docker', 'compose', '-f', 'compose.api7.yaml', 'up', '-d'], cwd=ROOT, check=True)
-    print('API7 Enterprise http://localhost:18091 설정 등록 완료. 실제 요청 검증은 별도로 실행하세요.')
+    print('API7 Enterprise http://localhost:18090 설정 등록 완료. 실제 요청 검증은 별도로 실행하세요.')
 
 
 if __name__ == '__main__':
