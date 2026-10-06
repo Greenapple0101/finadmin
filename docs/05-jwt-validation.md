@@ -1,6 +1,6 @@
 # 05. FinAdmin이 받은 JWT를 직접 검증하기
 
-이번 단계의 목표는 **FinAdmin이 요청에 담긴 액세스 토큰을 스스로 확인한 뒤 API를 실행하도록 만드는 것**입니다. APISIX에서 이미 검사했더라도 FinAdmin의 검사는 그대로 실행됩니다.
+이번 단계의 목표는 **FinAdmin이 요청에 담긴 액세스 토큰을 스스로 확인한 뒤 API를 실행하도록 만드는 것**입니다. API7 Enterprise에서 이미 검사했더라도 FinAdmin의 검사는 그대로 실행됩니다.
 
 01번 문서는 인증을 붙이기 전의 첫 앱을 설명합니다. 현재는 이 문서와 06번 문서의 보안 규칙까지 적용되어 있으므로 관리자 API를 토큰 없이 호출하면 거절됩니다.
 
@@ -101,19 +101,22 @@ Docker Compose로 실행할 때는 `JWT_JWK_SET_URI`가 `http://keycloak:8080/re
 
 ```java
 .requestMatchers(HttpMethod.GET, "/api/hello").permitAll()
-.requestMatchers("/api/admin/**").hasRole("admin")
-.anyRequest().authenticated()
+.requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("user", "admin")
+.requestMatchers(HttpMethod.GET, "/api/admin/summary").hasRole("admin")
+.anyRequest().denyAll()
 ```
 
 - `GET /api/hello`는 토큰 없이 실행 여부를 확인할 수 있습니다.
-- `/api/admin/` 아래 주소는 관리자 역할이 필요합니다.
-- `/api/me`를 비롯한 나머지 요청은 인증이 필요합니다.
+- `GET /api/me`는 유효한 토큰과 이 앱의 `user` 또는 `admin` 역할이 필요합니다.
+- `GET /api/admin/summary`는 이 앱의 `admin` 역할이 필요합니다.
+- 표에 없는 경로와 HTTP 메서드는 기본 거절합니다.
+- Gateway 경유 `hello`는 백엔드 직접 호출과 달리 토큰과 앱 역할이 필요합니다.
 
 `permitAll()`은 접근에 인증을 요구하지 않는다는 뜻입니다. **잘못된 Bearer 토큰을 일부러 붙여도 무시한다는 뜻은 아닙니다.** 토큰을 보낸 요청은 인증 필터의 검사를 받을 수 있습니다.
 
 `DispatcherType.ERROR`를 허용하는 줄은 이미 처리 중인 오류를 Spring 오류 처리기로 넘기기 위한 것입니다. 외부에서 처음 요청하는 `/error` 주소 전체를 공개하는 설정은 아닙니다.
 
-Gateway는 별도 규칙을 가집니다. 이번 APISIX 설정은 `/admin/*` 전체를 보호하므로 Gateway를 거친 `/admin/api/hello`도 토큰이 필요합니다. 백엔드에 직접 보낸 인사 요청과 구분해야 합니다.
+Gateway는 별도 규칙을 가집니다. 이번 API7 Enterprise 설정은 `/admin/*` 전체를 보호하므로 Gateway를 거친 `/admin/api/hello`도 토큰이 필요합니다. 백엔드에 직접 보낸 인사 요청과 구분해야 합니다.
 
 ## 6. 세션과 CSRF 설정을 이렇게 선택한 이유
 
@@ -160,6 +163,6 @@ CSRF는 브라우저가 자동으로 붙이는 로그인 쿠키 등을 악용해
 
 Spring 기본 시간 검사는 서버 간 시계 차이를 고려해 **60초의 오차 범위**를 허용합니다. 그래서 테스트에서는 5분 전에 만료되거나 5분 뒤부터 사용할 수 있는 토큰을 만듭니다. 만료 시각에서 1초 지난 토큰이 백엔드에 즉시 거절되어야 한다고 기대하면 이 설정을 잘못 이해한 것입니다. [Spring 시간 검증 설명](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html#oauth2resourceserver-jwt-validation)
 
-이 테스트는 백엔드 검증을 확인합니다. 실제 Keycloak 로그인과 APISIX 연결까지의 전체 흐름은 별도 실행 검증이 필요합니다. 현재 HTTP 주소와 직접 호출 포트는 로컬 실습용이며 운영 배포 구성이 완성되었다는 뜻은 아닙니다.
+이 테스트는 백엔드 검증을 확인합니다. 실제 Keycloak 로그인과 API7 Enterprise 연결까지의 전체 흐름은 별도 실행 검증이 필요합니다. 현재 HTTP 주소와 직접 호출 포트는 로컬 실습용이며 운영 배포 구성이 완성되었다는 뜻은 아닙니다.
 
 다음은 [06. 관리자 권한 제한](06-admin-authorization.md)에서 “정상 토큰인데 왜 403이 나오는가”를 읽으면 됩니다.

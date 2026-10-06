@@ -14,10 +14,9 @@
 | 역할 없음·다른 앱 역할 | 기본 ACL에서 403 |
 | 미등록 경로·메서드 | 낮은 우선순위 fallback의 기본 abort 응답으로 403 |
 | 비정상 JWT·시간·역할 자료형 | 짧은 보조 함수로 엄격히 거절 |
-| 레거시 신원 전달 | 외부 신원 헤더를 제거하고 검증된 sub·iss만 전달 |
 | 요청 전달 | proxy-rewrite와 Service의 Upstream |
 
-등록 수는 Service 4개, Route 18개입니다. 허용 API Route 14개에 각각 ACL이 있으며 fallback 3개와 정적 프런트 1개에는 허용 ACL을 붙이지 않습니다. fallback은 인증 이후 무조건 거절합니다.
+등록 수는 Service 3개, Route 15개입니다. 허용 API Route 12개에 각각 ACL이 있으며 fallback 2개와 정적 프런트 1개에는 허용 ACL을 붙이지 않습니다. fallback은 인증 이후 무조건 거절합니다.
 
 ## 실제 화면에서 읽는 예
 
@@ -40,9 +39,9 @@ Gateway Groups → finlab-rbac → Services → finlab-finadmin-api → Routes �
 ## 가볍게 유지한 방법
 
 - 정책은 `infra/gateway/policies.json`에만 작성하고 API7 설정은 `scripts/setup-api7.py`로 등록합니다.
-- Enterprise에서 실행하는 보조 함수는 `enterprise-identity.lua` 43줄입니다. 이전 79줄 RBAC 함수의 경로 탐색·역할 비교·JWT 재해석을 이 구성에서 제거했습니다. 사전 자료형 검사 함수는 별도로 유지합니다.
+- Enterprise에서 실행하는 보조 함수는 `enterprise-identity.lua` 33줄입니다. 이전 79줄 RBAC 함수의 경로 탐색·역할 비교·JWT 재해석을 이 구성에서 제거했습니다. 사전 자료형 검사 함수는 별도로 유지합니다.
 - 기존 OSS 컨테이너·설정·RBAC 함수·생성기·OSS 전용 격리 검사 코드를 제거했습니다. Enterprise 설정은 정책표에서 직접 만듭니다. 이전 소스와 실행 기록은 Git 이력으로 남아 있습니다.
-- Spring의 기존 JWT·역할 검사는 그대로입니다. 인증 기능 없는 레거시 때문에 모든 백엔드의 검증을 제거하지 않습니다.
+- Spring의 기존 JWT·역할 검사는 그대로입니다. 두 앱이 각자의 Client Role을 기준으로 접근을 허용합니다.
 
 회사 소속 확인, 요청자와 승인자가 같은지, 잔액과 이체 상태 같은 규칙은 업무 DB가 필요하므로 FinAccess에 남깁니다. Keycloak은 사용자·Client Role과 토큰 발급을 담당하고, LDAP 그룹 원본도 유지합니다.
 
@@ -50,13 +49,13 @@ Gateway Groups → finlab-rbac → Services → finlab-finadmin-api → Routes �
 
 ## 검증 결과
 
-[단일 Enterprise 환경 최종 157개 검사](verification/api7-only-2026-10-06.json)가 모두 통과했습니다.
+[현재 두 백엔드 구성의 135개 검사](verification/api7-two-backends-2026-10-06.json)가 모두 통과했습니다.
 
 - 토큰 없음·변조·만료·미래 nbf·대상 불일치, 경로/역할/메서드, 원래 URI 우회.
-- 직접 Spring 재검증, 다른 회사 접근, 레거시 격리, LDAP 그룹 변경과 복원.
-- 배포된 18개 Route 조회, 정상 query 요청, 위조 신원 헤더, 기본 ACL 거절 응답과 upstream 미도달 로그.
+- 직접 Spring 재검증, 다른 회사 접근, LDAP 그룹 변경과 복원.
+- 배포된 15개 Route 조회, 정상 query 요청, 위조 신원 헤더, 기본 ACL 거절 응답과 upstream 미도달 로그.
 
-앞서 별도 실행한 [23개 집중 검사](verification/api7-native-acl-focused-2026-10-06.json)는 중간 검증 기록이며 157개에 중복 합산하지 않습니다. 최종 검사에는 해당 검사를 통합했습니다. LDAP 관리자 그룹도 복원했습니다. 일반 사용자의 고유 계좌 생성 요청이 ACL에서 403으로 끝나고 Gateway 로그의 upstream 상태가 `-`인 것을 확인했으며, 계좌는 생성하지 않았습니다.
+과거 검증 기록은 Git 이력에 보존하고 현재 보고서와 합산하지 않습니다. LDAP 관리자 그룹도 복원했습니다. 일반 사용자의 고유 계좌 생성 요청이 ACL에서 403으로 끝나고 Gateway 로그의 upstream 상태가 `-`인 것을 확인했으며, 계좌는 생성하지 않았습니다.
 
 동일 서명 키의 잘못된 issuer를 Enterprise에서 독립적으로 시험하는 검사는 여전히 추가 과제입니다. 과거 OSS 격리 검사 결과를 Enterprise 결과로 합산하지 않습니다. 운영 TLS·LDAPS·가용성·토큰 즉시 폐기 역시 이번 기본 ACL 전환의 완료 범위에 포함하지 않습니다.
 

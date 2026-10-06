@@ -24,7 +24,6 @@ Gateway Group은 같은 설정을 배포받을 Gateway들을 묶는 단위입니
 |---|---|---|
 | finlab-finaccess-api | 금융 업무 Spring 앱 | /access/api/me |
 | finlab-finadmin-api | 관리자 Spring 앱 | /admin/api/admin/summary |
-| finlab-legacy-api | JWT 검증이 없는 모의 앱 | /legacy/api/reports |
 | finlab-frontend | Nginx 정적 사용자 앱 | / |
 
 Enabled는 설정이 활성화됐다는 표시입니다. 실제 요청 성공 여부는 HTTP 검사와 Gateway 로그로 별도로 확인했습니다. 상단 배너는 현재 라이선스가 테스트 환경용이라는 뜻입니다.
@@ -67,17 +66,16 @@ Route 화면의 Methods는 이 API에서 GET만 표시합니다. 잘못된 메�
 
 Spring에는 원래 Bearer JWT가 전달됩니다. Spring도 서명·발급자·audience와 자신의 역할을 다시 검사합니다. 회사 소속 같은 업무 데이터 규칙은 FinAccess가 판단합니다.
 
-레거시는 다릅니다. Gateway가 역할을 확인한 뒤 외부 신원 헤더를 덮어쓰고, 검증된 sub·iss만 전달합니다. 레거시는 호스트 포트를 공개하지 않고 Gateway만 연결된 내부 네트워크에 있습니다. 따라서 헤더 자체가 암호학적 인증 수단인 것은 아니며, 접근 경로 통제가 신뢰의 전제입니다.
 
 ## 6. 화면과 결과를 연결하는 짧은 시연
 
 1. 콘솔에서 위 Service와 Route의 OIDC·역할 플러그인을 보여 줍니다.
 2. 별도 18090 사용자 앱에서 일반 사용자로 관리자 요약을 요청합니다. 예상 결과는 Gateway 403입니다.
 3. 관리자로 같은 요청을 보냅니다. 예상 결과는 Spring 200입니다.
-4. [검증 기록](verification/api7-2026-10-06.json)에서 직접 Spring 호출도 역할을 검사하는 사례를 보여 줍니다.
+4. [검증 기록](verification/api7-two-backends-2026-10-06.json)에서 직접 Spring 호출도 역할을 검사하는 사례를 보여 줍니다.
 5. LDAP 그룹 제거 후 기존 토큰은 200, 새 토큰은 403이었던 기록을 비교합니다. 이번 검증 종료 시 그룹은 복원했습니다.
 
-최종 기본 ACL 설정에서 배포 확인을 포함한 통합 검사 157개가 통과했습니다. 화면에 플러그인이 보이는 사실과 실제 요청이 차단되는 사실을 구분해 설명하세요. [구현 보고서](15-api7-enterprise-integration.md)에 이번 검사 범위와 추가 과제를 적었습니다.
+최종 기본 ACL 설정에서 배포 확인을 포함한 현재 구성의 통합 검사 135개가 통과했습니다. 화면에 플러그인이 보이는 사실과 실제 요청이 차단되는 사실을 구분해 설명하세요. [구현 보고서](15-api7-enterprise-integration.md)에 이번 검사 범위와 추가 과제를 적었습니다.
 
 ## 자주 헷갈리는 부분
 

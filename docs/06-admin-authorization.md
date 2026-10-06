@@ -13,7 +13,7 @@
 
 예를 들어 일반 사용자 `alice`와 관리자 `admin`은 모두 정상 토큰을 받을 수 있습니다. 두 사용자 모두 `/api/me`로 자신의 정보를 확인할 수 있지만, 관리자 요약 API는 `admin`만 사용할 수 있습니다.
 
-이는 **현재 FinAdmin의 규칙**입니다. Gateway 플러그인의 실패 상태 코드까지 무조건 같은 것은 아닙니다. 이번 APISIX의 audience 불일치 응답은 403이고 FinAdmin의 audience 불일치는 401입니다. [07. APISIX Gateway](07-apisix-gateway.md)에서 어느 지점이 거절했는지 함께 확인합니다.
+이는 **현재 FinAdmin의 규칙**입니다. Gateway 플러그인의 실패 상태 코드까지 무조건 같은 것은 아닙니다. 이번 API7 Enterprise의 audience 불일치 응답은 403이고 FinAdmin의 audience 불일치는 401입니다. [API7 Gateway 정책](14-gateway-rbac-policy.md)에서 어느 지점이 거절했는지 함께 확인합니다.
 
 ## 2. Keycloak과 백엔드가 맡는 일을 구분한다
 
@@ -65,7 +65,8 @@ FinAdmin은 정확히 **`resource_access.finadmin-api.roles`만** 읽습니다. 
 2. 이름으로 값을 찾는 `Map` 모양인지 확인합니다.
 3. 그 안의 `finadmin-api` 값만 꺼냅니다.
 4. 그 안의 `roles`가 목록인지 확인합니다.
-5. 목록의 글자값에 `ROLE_`를 붙여 Spring 권한을 만듭니다.
+5. 모든 항목이 비어 있지 않은 문자열인지 확인합니다. 하나라도 잘못됐으면 권한 목록 전체를 비웁니다.
+6. 검사를 통과한 역할값에 `ROLE_`를 붙여 Spring 권한을 만듭니다.
 
 예를 들면 다음처럼 바뀝니다.
 
@@ -79,7 +80,7 @@ Keycloak의 finadmin-api 역할 admin
 
 중간 값이 없거나 모양이 이상하면 `List.of()`로 빈 권한 목록을 반환합니다. 잘못된 역할 정보 때문에 관리자로 인정하거나 500 오류를 내는 대신, 관리자 권한을 부여하지 않습니다.
 
-역할이 없다고 토큰 자체가 항상 잘못된 것은 아닙니다. 토큰 검증을 통과했다면 `/api/me`는 사용할 수 있고, 관리자 API는 권한 부족으로 거절됩니다.
+역할이 없다고 토큰 자체가 항상 잘못된 것은 아닙니다. 하지만 현재 `GET /api/me`도 `user` 또는 `admin` 역할이 필요합니다. 유효한 토큰에 이 앱의 역할이 없다면 내 정보와 관리자 API 모두 403입니다.
 
 ## 5. SecurityConfiguration에서 역할과 URL을 연결한다
 
@@ -97,10 +98,12 @@ authenticationConverter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConver
 그다음 관리자 주소에 필요한 권한을 적습니다.
 
 ```java
-.requestMatchers("/api/admin/**").hasRole("admin")
+.requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("user", "admin")
+.requestMatchers(HttpMethod.GET, "/api/admin/summary").hasRole("admin")
+.anyRequest().denyAll()
 ```
 
-`/api/admin/**`는 `/api/admin/` 아래의 주소들을 가리킵니다. `hasRole("admin")`은 기본적으로 `ROLE_admin`이라는 Spring 권한을 찾습니다. 그래서 앞에서 `ROLE_`를 붙였습니다. 역할 이름의 대소문자는 구분하며, 여기서는 소문자 `admin`을 사용합니다. [Spring HTTP 요청 인가 문서](https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html)
+`HttpMethod.GET`과 정확한 경로를 함께 지정하므로 다른 메서드나 주소까지 자동 허용하지 않습니다. `denyAll()`은 명시하지 않은 요청을 거절합니다. `hasRole("admin")`은 기본적으로 `ROLE_admin`이라는 Spring 권한을 찾습니다. 그래서 앞에서 `ROLE_`를 붙였습니다. 역할 이름의 대소문자는 구분하며, 여기서는 소문자 `admin`을 사용합니다. [Spring HTTP 요청 인가 문서](https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html)
 
 이 검사는 Controller 실행 전에 일어납니다. 현재는 `AdminSummaryController` 안에 `if (관리자)` 코드를 쓰거나 `@PreAuthorize`를 추가하지 않아도 URL 접근 규칙이 적용됩니다.
 

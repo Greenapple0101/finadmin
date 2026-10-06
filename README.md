@@ -15,7 +15,6 @@ Keycloak에서 발급받은 액세스 토큰을 API7 Enterprise가 검사하고 
 브라우저 ── Bearer 토큰 ── API7 Enterprise :18090
                             ├── FinAccess: JWT + 역할 + 회사·이체 규칙
                             ├── FinAdmin: JWT + 관리자 역할
-                            ├── 레거시: 검증된 신원 헤더
                             └── Nginx: 사용자 화면 파일
 API7 실제 관리 UI: https://localhost:7443
 ```
@@ -69,7 +68,7 @@ cd finadmin
 3. `finlab` 앱 컨테이너들을 실행하고 `finlab-api7`의 Enterprise Gateway를 18090에 연결합니다.
 4. 기존 Keycloak 내부 계정으로 로그인하고 API와 모의 이체를 검증합니다.
 5. LDAP Provider·그룹 역할·직원의 회사 연결을 준비합니다.
-6. LDAP 계정 로그인·모의 이체·그룹 제거와 복원 및 API7 기본 ACL·네트워크 격리를 검증합니다.
+6. LDAP 계정 로그인·모의 이체·그룹 제거와 복원 및 API7 기본 ACL·두 백엔드의 독립 검증를 검증합니다.
 
 이 스크립트의 빌드 단계는 `bootJar`입니다. 전체 Java 테스트는 아래의 별도 명령으로 실행합니다. 자동 검증에는 실제 토큰의 만료와 Spring 시간 오차 허용 범위를 기다리는 과정이 있어 서버 준비 후에도 1분 이상 걸릴 수 있습니다.
 
@@ -120,7 +119,7 @@ python3 scripts/verify-ldap.py
 
 ## 테스트와 확인한 결과
 
-Java 테스트 기록은 2026-09-29, 실제 서버 검증은 LDAP 추가 후 2026-10-01 기준입니다. 이번 변경에는 Java 코드 수정이 없어 기존 Java 테스트 수를 유지하고 실제 연동 검사를 실행했습니다.
+Java 테스트 기록은 2026-09-29, 실제 서버 검증은 LDAP 추가 후 2026-10-01 기준입니다. 아래 표는 당시의 과거 기록입니다. 오늘 이 수의 Java 테스트를 다시 실행한 것은 아닙니다. 현재 API7 구성의 검사 결과는 아래 별도 기록을 기준으로 봅니다.
 
 | 검증 | 결과 |
 | --- | --- |
@@ -171,8 +170,8 @@ FinAdmin만 Java로 읽어 보려면 `./gradlew bootRun`도 가능합니다. 이
 5. [Spring의 JWT 검증](docs/05-jwt-validation.md)
 6. [관리자 권한 제한](docs/06-admin-authorization.md)
 7. [API7 Enterprise의 검증·인가](docs/17-api7-native-authorization.md) — 이전 APISIX 구성은 과거 기록입니다.
-8. [전체 흐름의 검증 결과와 재현 방법](docs/08-end-to-end-verification.md)
-9. [회사 내부 공유 문서](docs/09-internal-sharing.md)
+8. [현재 API7 검증 결과와 재현 방법](docs/15-api7-enterprise-integration.md) — [과거 HTTP 검증](docs/08-end-to-end-verification.md)은 날짜를 구분합니다.
+9. [현재 회사 공유용 구성·검증 보고서](docs/15-api7-enterprise-integration.md) — [이전 공유 기록](docs/09-internal-sharing.md)
 10. [아키텍처 그림을 읽는 순서](docs/10-architecture.md)
 11. [Keycloak 설정을 직접 따라 읽는 핸즈온 보고서](docs/11-keycloak-hands-on-report.md)
 12. [Keycloak 현재 설정값 목록과 확인 기록](docs/12-keycloak-settings-reference.md)
@@ -188,4 +187,6 @@ LDAP도 Docker 내부의 평문 LDAP 실습이며 StartTLS/LDAPS와 실제 Windo
 
 실제 제품 화면을 따라 읽으려면 [API7 콘솔 캡처 강의자료](docs/16-api7-console-walkthrough.md)를 참고하세요.
 
-18090 단일 Enterprise 환경의 [최종 157개 검사 기록](docs/verification/api7-only-2026-10-06.json)이 모두 통과했습니다. 이전 포트의 과거 검사와 합산하지 않습니다.
+18090 단일 Enterprise 환경의 [현재 두 백엔드 구성의 135개 검사 기록](docs/verification/api7-two-backends-2026-10-06.json)이 모두 통과했습니다. 이전 포트의 과거 검사와 합산하지 않습니다.
+
+확장 가능성: 필요하면 레거시 백엔드도 연결할 수 있으며, 현재 구현·아키텍처에는 포함하지 않습니다.

@@ -13,7 +13,7 @@ API7 Enterprise는 **기본 Route + OIDC + ACL**로 처리합니다. 사용자 �
 5. 기본 `acl`의 `allow_labels.roles`가 해당 API의 허용 역할을 비교합니다.
 6. Spring은 전달받은 JWT와 역할을 독립적으로 재검증하고 업무 규칙을 적용합니다.
 
-API Route 14개, 미등록 경로·메서드를 막는 fallback 3개, 프런트 Route 1개입니다. fallback은 OIDC 검사 후 기본 `fault-injection.abort`로 403을 반환하며 upstream에 전달하지 않습니다.
+API Route 12개, 미등록 경로·메서드를 막는 fallback 2개, 프런트 Route 1개입니다. fallback은 OIDC 검사 후 기본 `fault-injection.abort`로 403을 반환하며 upstream에 전달하지 않습니다.
 
 정책 원본은 `infra/gateway/policies.json` 하나입니다. `scripts/setup-api7.py`가 실제 제품 설정으로 변환합니다. 이전 OSS 구성과 RBAC 코드는 제거하고 Enterprise 설정을 직접 만듭니다. [실제 콘솔 강의자료](16-api7-console-walkthrough.md)와 [기본 ACL 전환 설명](17-api7-native-authorization.md)을 함께 보세요.
 
@@ -35,8 +35,6 @@ API Route 14개, 미등록 경로·메서드를 막는 fallback 3개, 프런트 
 | GET | `/admin/api/hello` | `finadmin-api` | user 또는 admin |
 | GET | `/admin/api/me` | `finadmin-api` | user 또는 admin |
 | GET | `/admin/api/admin/summary` | `finadmin-api` | admin |
-| GET | `/legacy/api/reports` | `finlegacy-api` | reader 또는 admin |
-| GET | `/legacy/api/admin/summary` | `finlegacy-api` | admin |
 
 Spring의 직접 `GET /api/hello`는 업무 정보가 없는 공개 진단 예외입니다. Gateway 경유 hello는 앱 역할을 요구합니다. 프런트 정적 파일은 로그인 전에도 필요하므로 공개합니다.
 
@@ -46,16 +44,11 @@ Spring의 직접 `GET /api/hello`는 업무 정보가 없는 공개 진단 예�
 |---|---|
 | Keycloak | 사용자 로그인, 토큰 발급, Client Role 포함 |
 | OpenLDAP | 외부 직원 비밀번호와 그룹 원본 |
-| API7 Enterprise | JWT 검증, 경로·메서드별 RBAC, 라우팅, 레거시 신원 헤더 생성 |
+| API7 Enterprise | JWT 검증, 경로·메서드별 RBAC, 라우팅 |
 | FinAccess | JWT·역할 재검증, iss+sub와 업무 사용자 연결, 회사·이체 규칙 |
 | FinAdmin | JWT·역할 재검증, 관리자 API 제한 |
-| 레거시 | 샘플 보고서 응답. JWT를 검증하지 않음 |
 
-## 레거시를 안전하게 연결하는 조건
-
-`finlegacy-api`는 별도의 audience이며 reader/admin 역할을 사용합니다. 일반 보고서는 둘 중 하나, 관리자 요약은 admin이 필요합니다. Gateway는 외부 `X-Finlab-Subject`, `X-Finlab-Issuer`, 역할 및 토큰 관련 헤더를 지우고, 검증한 JWT의 sub·iss로 신원 헤더를 만듭니다. Bearer 원문은 레거시에 전달하지 않습니다.
-
-레거시는 호스트 포트를 공개하지 않고 internal 네트워크에만 연결합니다. 이 네트워크 구성원은 레거시와 API7 Enterprise 하나뿐입니다. 다른 앱 컨테이너의 실제 IP 직접 호출도 거절됨을 확인했습니다. Docker 관리자/root의 접근까지 막는 보장은 아닙니다. 운영에서는 Gateway와 레거시 간 mTLS·방화벽 정책이 필요합니다.
+## 업무 데이터와 역할의 구분
 
 회사 소속은 LDAP 그룹에서 자동 결정되지 않습니다. FinAccess 업무 DB의 `iss + sub` 연결에서 판단합니다. 그룹을 제거해 새 토큰의 역할이 사라져도 기존 미만료 JWT는 발급 당시 역할을 유지합니다.
 

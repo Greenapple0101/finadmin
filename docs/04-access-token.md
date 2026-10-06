@@ -11,7 +11,7 @@
 5. 화면은 state와 발급자, 요청 시간을 확인하고 code와 원래 verifier를 토큰 endpoint에 보냅니다.
 6. Keycloak이 돌려준 액세스 토큰을 메모리에 보관합니다.
 7. API 요청의 `Authorization: Bearer ...` 헤더에 액세스 토큰을 붙입니다.
-8. APISIX와 목적지 Spring 앱이 각각 토큰을 검증합니다.
+8. API7 Enterprise와 목적지 Spring 앱이 각각 토큰을 검증합니다.
 
 비밀번호를 우리 프런트 코드나 백엔드에 넘겨 로그인시키지 않습니다. 비밀번호 입력은 Keycloak이 담당합니다. 자동 검증 스크립트도 같은 로그인 폼과 Code + PKCE 흐름을 따라갑니다.
 

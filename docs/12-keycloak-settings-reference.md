@@ -1,5 +1,7 @@
 # FinLab Keycloak 설정값 목록과 확인 기록
 
+> **현재 구성 안내(2026-10-06):** 아래는 당시 설정·검증 스냅샷입니다. 현재는 OpenLDAP과 API7 Enterprise를 사용하며 Gateway도 기본 ACL로 앱 역할을 검사합니다. 현재 구조는 [아키텍처](10-architecture.md), 역할 규칙은 [정책표](14-gateway-rbac-policy.md), 실제 재검증은 [API7 보고서](15-api7-enterprise-integration.md)를 기준으로 보세요.
+
 > **과거 설정 스냅샷:** 이 목록은 2026-09-29 기준입니다. 2026-10-01에 LDAP Provider·Group Mapper·직원 4명·그룹 역할 연결이 추가됐습니다. 추가 설정값과 검증 결과는 [13번 LDAP 보고서](13-ldap-federation-hands-on.md)를 확인하세요.
 
 > 서버 설정 확인: **2026-09-29 17:55:39 KST** · 실제 API 확인: **2026-09-29 17:57:23 KST**
@@ -363,7 +365,7 @@ Groups 0개 · 외부 Identity providers 0개 · User federation providers 0개.
 | introspection_endpoint | `http://localhost:18080/realms/finlab/protocol/openid-connect/token/introspect` |
 | code_challenge_methods_supported | `plain, S256` |
 
-위 주소는 호스트에서 조회한 discovery 결과입니다. 컨테이너에서 사용할 내부 discovery·JWKS 주소는 [Compose](../compose.yaml)와 [APISIX 설정](../infra/apisix/apisix.yaml)에 따로 지정했습니다.
+위 주소는 호스트에서 조회한 discovery 결과입니다. 컨테이너에서 사용할 내부 discovery·JWKS 주소는 [Compose](../compose.yaml)와 [APISIX 설정](https://github.com/Greenapple0101/finadmin/blob/65977ea0cb190c192656afe71ec26d41e867b617/infra/apisix/apisix.yaml)에 따로 지정했습니다.
 
 ## 8. 이번에 새로 실행한 HTTP 확인 32건
 

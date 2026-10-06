@@ -1,5 +1,7 @@
 # Keycloak 설정을 직접 따라 읽는 FinLab 실습 보고서
 
+> **현재 구성 안내(2026-10-06):** 아래는 당시 설정·검증 스냅샷입니다. 현재는 OpenLDAP과 API7 Enterprise를 사용하며 Gateway도 기본 ACL로 앱 역할을 검사합니다. 현재 구조는 [아키텍처](10-architecture.md), 역할 규칙은 [정책표](14-gateway-rbac-policy.md), 실제 재검증은 [API7 보고서](15-api7-enterprise-integration.md)를 기준으로 보세요.
+
 > **2026-10-01 추가:** 아래 본문은 2026-09-29의 내부 계정 실습 기록입니다. 이후 OpenLDAP User Federation, LDAP 직원 4명, `/ldap` 그룹과 Client Role 연결을 추가했습니다. 아래의 “User federation 없음” 등 당시 상태와 현재 확장을 구분하고, [13번 LDAP 핸즈온 보고서](13-ldap-federation-hands-on.md)를 이어서 읽으세요.
 
 > **이 문서의 목표:** 콘솔의 설정을 보면서 “이걸 왜 만들었고, 토큰의 어느 부분을 바꾸며, 어느 코드가 사용하는지” 설명할 수 있게 되기.
@@ -534,7 +536,7 @@ JWT 검증·권한 변환의 배경은 [Spring Resource Server JWT 문서](https
 
 ### 10.2 APISIX는 이 설정을 읽습니다
 
-파일: [infra/apisix/apisix.yaml](../infra/apisix/apisix.yaml).
+파일: [infra/apisix/apisix.yaml](https://github.com/Greenapple0101/finadmin/blob/65977ea0cb190c192656afe71ec26d41e867b617/infra/apisix/apisix.yaml).
 
 | 설정 | 현재 값·동작 | Keycloak과의 연결 |
 | --- | --- | --- |
@@ -809,7 +811,7 @@ curl -s http://localhost:18080/realms/finlab/protocol/openid-connect/certs | pyt
 
 이 문서의 현재 값·사용자 역할·Mapper 구성·라우팅·권한 규칙은 실행 중인 로컬 서버와 저장소를 직접 확인한 결과입니다. 공식 문서는 아래 개념과 제품 동작을 교차 확인하는 데 사용했습니다. 메뉴는 실제 26.7.4 화면을 우선했습니다.
 
-- [프로젝트 Realm 설정](../infra/keycloak/finlab-realm.json), [Compose](../compose.yaml), [APISIX 설정](../infra/apisix/apisix.yaml), [브라우저 로그인 코드](../frontend/app.js)
+- [프로젝트 Realm 설정](../infra/keycloak/finlab-realm.json), [Compose](../compose.yaml), [APISIX 설정](https://github.com/Greenapple0101/finadmin/blob/65977ea0cb190c192656afe71ec26d41e867b617/infra/apisix/apisix.yaml), [브라우저 로그인 코드](../frontend/app.js)
 - [Keycloak 26.7 관리 가이드](https://www.keycloak.org/docs/26.7.0/server_admin/): Realm·Client·Scope와 콘솔 기능
 - [Keycloak Realm import](https://www.keycloak.org/server/importExport): 기존 Realm의 시작 시 import 동작
 - [Keycloak hostname](https://www.keycloak.org/server/hostname): 외부 주소와 내부 통신 주소

@@ -1,6 +1,6 @@
 # API7 Enterprise 연동과 검증 보고서
 
-2026-10-06. FinLab의 주 Gateway를 실제 API7 Enterprise 3.10.2에 연결했습니다. Gateway도 JWT와 역할을 검사하며, Spring 두 앱은 독립적으로 같은 검사를 수행합니다. JWT 검증 기능이 없는 레거시 모의 앱도 별도 네트워크로 연결했습니다.
+2026-10-06. FinLab의 주 Gateway를 실제 API7 Enterprise 3.10.2에 연결했습니다. Gateway도 JWT와 역할을 검사하며, Spring 두 앱은 독립적으로 같은 검사를 수행합니다.
 
 ## 실제 제품과 접속 주소
 
@@ -18,24 +18,9 @@ Nginx는 로그인·API 호출을 보여 주는 정적 사용자 앱만 제공�
 
 그림의 시간 검증에는 기본 OIDC와 엄격한 exp·nbf 보조 검사가 포함됩니다. 관리 UI에서 Gateway로 향하는 선은 Control Plane을 통한 설정 배포를 요약한 것입니다.
 
-```mermaid
-flowchart LR
-  B[브라우저] <-->|Code와 PKCE 로그인| K[Keycloak]
-  K <-->|User Federation| L[OpenLDAP]
-  K --> KD[(Keycloak PostgreSQL)]
-  B -->|Bearer Access Token| G[API7 Enterprise 18090\nJWT 검증과 API RBAC]
-  C[API7 관리 UI 7443] -->|설정 배포| G
-  G -->|같은 JWT /access| A[FinAccess\nJWT와 역할 재검증]
-  G -->|같은 JWT /admin| D[FinAdmin\nJWT와 역할 재검증]
-  G -->|검증된 신원 헤더 /legacy| E[레거시 모의 API\nJWT 검증 없음]
-  G -->|화면 요청| W[Nginx 정적 사용자 앱]
-  A --> DB[(업무 PostgreSQL)]
-  G -.->|JWKS 조회와 캐시| K
-  A -.->|JWKS 조회와 캐시| K
-  D -.->|JWKS 조회와 캐시| K
-```
 
-레거시 내부 네트워크에는 Gateway들만 함께 연결됩니다. 조회용 레거시 보고서와 FinAdmin 요약 수치는 샘플입니다. 금융 이체는 모의 업무입니다.
+
+FinAdmin 요약 수치는 샘플이며 금융 이체는 모의 업무입니다. 두 Spring 백엔드는 같은 토큰을 각자의 audience와 Client Role 기준으로 검증합니다.
 
 ## 등록한 실제 관리 대상
 
@@ -45,16 +30,15 @@ Gateway Group `finlab-rbac`, 전용 컨테이너 `finlab-api7-gateway`, loopback
 |---|---|---|
 | finlab-finaccess-api | /access 및 /access/* | finaccess:8080 |
 | finlab-finadmin-api | /admin 및 /admin/* | finadmin:8081 |
-| finlab-legacy-api | /legacy 및 /legacy/* | legacy:8082 |
 | finlab-frontend | /*, 낮은 우선순위 | web:80 |
 
-현재 각 API 경로·메서드마다 기본 ACL을 설정한 Route를 별도로 등록했습니다. 총 18개 Route(허용 14, fallback 3, 프런트 1)입니다. 아래 기본 ACL 전환 이후의 기록을 기준으로 시연하세요.
+현재 각 API 경로·메서드마다 기본 ACL을 설정한 Route를 별도로 등록했습니다. 총 3개 Service와 15개 Route(허용 12, fallback 2, 프런트 1)입니다. 아래 기본 ACL 전환 이후의 기록을 기준으로 시연하세요.
 
 역할은 `resource_access.<해당 API>.roles`에서만 읽습니다. [전체 API 정책표](14-gateway-rbac-policy.md)를 참고하세요. API7 운영자가 설정을 편집하는 관리 권한과, 사용자가 API를 호출하는 업무 역할은 서로 다른 RBAC입니다.
 
 ## 이번에 실행한 검증
 
-APISIX 제거와 포트 교체 후 **18090의 Enterprise 단일 환경에서 157개 검사 통과**, 실패 0개입니다. [최신 통합 검사](verification/api7-only-2026-10-06.json)에는 기존 APISIX 부재·단일 Gateway 네트워크 확인도 포함됩니다. 이전 포트의 [156개 검사](verification/api7-native-acl-2026-10-06.json), [23개 추가 검사](verification/api7-native-acl-focused-2026-10-06.json), 이전 Lua 구성의 [125개 기록](verification/api7-2026-10-06.json)은 과거 기록으로 보존하며 합산하지 않습니다.
+2026-10-06, 현재 두 백엔드 구성으로 실제 검사를 다시 실행하여 **135개 통과, 실패 0개**를 확인했습니다. [이번 통합 검사](verification/api7-two-backends-2026-10-06.json)에는 배포된 Route, Gateway와 Spring의 거절 위치, LDAP 그룹 변경과 복원 결과가 담겨 있습니다. 과거 실행 결과는 Git 이력에 보존하며 이번 결과와 합산하지 않습니다.
 
 | 사례 | 확인한 결과 |
 |---|---|
@@ -64,8 +48,7 @@ APISIX 제거와 포트 교체 후 **18090의 Enterprise 단일 환경에서 157
 | 일반 사용자 관리자 요청 | Gateway 정책에서 403, 백엔드 미도달 |
 | 관리자 관리자 요청 | 백엔드 200 |
 | 다른 회사 조회 | Gateway 통과 후 FinAccess 403 |
-| 외부 신원 헤더 위조 | 검증된 sub·iss로 덮어쓰기, 권한 상승 실패 |
-| 일반 앱 컨테이너에서 레거시 IP 직접 호출 | 네트워크에서 차단 |
+| 외부 신원 헤더 위조 | 위조 헤더로 권한 상승 불가, Spring은 JWT의 신원 사용 |
 | LDAP admin 그룹 제거 | 새 토큰 403, 기존 토큰 200 |
 | LDAP 그룹 복원 | 새 토큰 200, 복원 확인 완료 |
 
@@ -88,11 +71,11 @@ setup은 FinLab 전용 그룹의 서비스·라우트만 갱신합니다. `.loca
 
 ## 5분 시연
 
-1. 실제 API7 콘솔에서 `finlab-rbac` 그룹과 위 서비스 네 개를 확인합니다.
+1. 실제 API7 콘솔에서 `finlab-rbac` 그룹과 위 서비스 세 개를 확인합니다.
 2. 개별 API Route의 openid-connect와 acl 설정을 확인합니다. allow_labels.roles에 허용 역할이 보이며 기본 제품 플러그인이 역할을 비교합니다.
-3. 18090 사용자 앱에서 alice로 로그인하고 관리자 요약 403, 레거시 보고서 200을 확인합니다.
-4. admin으로 로그인하여 관리자 요약과 레거시 관리자 요약 200을 확인합니다.
-5. 검사 JSON의 직접 Spring 403·레거시 네트워크 격리·LDAP 토큰 변화 결과를 설명합니다.
+3. 18090 사용자 앱에서 alice로 로그인하고 내 정보 200, 관리자 요약 403을 확인합니다.
+4. admin으로 로그인하여 관리자 요약 200을 확인합니다.
+5. 검사 JSON의 직접 Spring 403·LDAP 토큰 변화 결과를 설명합니다.
 
 아래 캡처는 **Enterprise를 경유하는 실제 사용자 앱**이며, API7 관리 UI 캡처가 아닙니다.
 
@@ -100,7 +83,7 @@ setup은 FinLab 전용 그룹의 서비스·라우트만 갱신합니다. `.loca
 
 ## 현재 범위와 추가 과제
 
-현재 완료: 실제 제품 라이선스 활성화, 전용 DP, Keycloak 프런트 연동, 경로/메서드 RBAC, 독립 Spring 검증, 레거시 격리, LDAP 회귀검사. 운영용 TLS·LDAPS·mTLS, 가용성·부하, 키 교체 장애 시나리오, 기존 JWT 즉시 폐기 정책은 별도 과제입니다. 제품 업그레이드는 수행하지 않았습니다.
+현재 완료: 실제 제품 라이선스 활성화, 전용 DP, Keycloak 프런트 연동, 경로/메서드 RBAC, 독립 Spring 검증, LDAP 회귀검사. 운영용 TLS·LDAPS·mTLS, 가용성·부하, 키 교체 장애 시나리오, 기존 JWT 즉시 폐기 정책은 별도 과제입니다. 제품 업그레이드는 수행하지 않았습니다.
 
 [실제 관리 콘솔 캡처 강의자료](16-api7-console-walkthrough.md)에서 서비스 목록과 라우트의 OIDC·RBAC 설정을 확인할 수 있습니다.
 
