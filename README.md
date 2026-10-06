@@ -1,5 +1,7 @@
 # FinAdmin · Keycloak과 APISIX 인증·인가 실습
 
+현재 주 시연 환경은 **API7 Enterprise**입니다. [연동·검증 보고서](docs/15-api7-enterprise-integration.md)와 [API 역할 정책표](docs/14-gateway-rbac-policy.md)를 먼저 보세요. 관리 UI는 `https://localhost:7443`, 사용자 앱은 `http://localhost:18091`입니다.
+
 [FinAccess](https://github.com/Greenapple0101/finaccess)와 별도로 실행하는 Spring Boot 관리자 API입니다. 이 저장소에는 두 백엔드를 함께 실습하기 위한 **OpenLDAP, Keycloak, Apache APISIX, 로그인 화면, 실행·검증 스크립트**도 있습니다.
 
 Keycloak에서 발급받은 액세스 토큰을 APISIX가 검사하고 전달합니다. FinAccess와 FinAdmin도 각각 토큰을 다시 검증하고, 자기 앱의 역할과 업무 규칙에 따라 응답합니다.
@@ -176,3 +178,5 @@ FinAdmin만 Java로 읽어 보려면 `./gradlew bootRun`도 가능합니다. 이
 LDAP도 Docker 내부의 평문 LDAP 실습이며 StartTLS/LDAPS와 실제 Windows AD는 미적용입니다. 새 로그인에서 그룹 변경이 역할에 반영되는지 확인했고, 기존 JWT는 만료 전까지 관리자 접근이 유지된다는 점도 검증했습니다.
 
 관리자 통계는 샘플이고 사용자 가입·프로비저닝 API는 없습니다. 공개 키로 검증하는 기존 JWT에 역할 변경이나 로그아웃이 즉시 반영된다고 보장하지 않습니다. 여러 프런트 사이의 SSO 시연, Istio, 대규모 부하 시험, 고가용성 검증은 포함하지 않았습니다.
+
+실제 제품 화면을 따라 읽으려면 [API7 콘솔 캡처 강의자료](docs/16-api7-console-walkthrough.md)를 참고하세요.
