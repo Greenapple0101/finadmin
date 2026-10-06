@@ -60,16 +60,21 @@ def check(name, expected, url, token=None, method='GET', body=None, *, layer, ex
     lower = {key.lower(): value for key, value in headers.items()}
     backend = lower.get('x-finlab-backend')
     rejected = lower.get('x-finlab-rejected-by')
+    # 기본 ACL/fault-injection의 고유 응답과 upstream 부재도 구분해서 기록합니다.
+    signal = value.get('message') if isinstance(value, dict) else None
+    native_denial = signal == 'Required application role missing (API7 ACL)'
+    default_denial = isinstance(value, dict) and value.get('rejectedBy') == 'gateway-policy'
     # Gateway 정책의 거절과, 백엔드에 도착한 요청을 응답 이름표로 구별합니다.
     # 이름표는 인증 수단이 아닙니다. 아래에서 실제 접근 로그도 함께 확인합니다.
     if layer == 'gateway-policy':
-        right_layer = rejected == 'gateway-policy' and backend is None
-    elif layer == 'gateway-jwt':
+        right_layer = (rejected == 'gateway-policy' or native_denial or default_denial) and backend is None
+    elif layer in ('gateway-jwt', 'gateway-no-body'):
         right_layer = backend is None
     else:
         right_layer = backend == layer and rejected is None
     record(name, status == expected and right_layer, expected=expected, actual=status,
-           expectedLayer=layer, backend=backend, rejectedBy=rejected, method=method,
+           expectedLayer=layer, backend=backend, rejectedBy=rejected,
+           nativeAclDenied=native_denial, method=method,
            path=urllib.parse.urlsplit(url).path)
     return value
 
@@ -193,6 +198,12 @@ def role_and_method_checks(tokens):
               base + '/api/not-configured', tokens['admin'], layer=layer)
     check('legacy: POST reports is denied before upstream', 403,
           LEGACY + '/api/reports', tokens['admin'], 'POST', layer='gateway-policy')
+    for method, path in [('HEAD', '/admin/api/me'), ('OPTIONS', '/admin/api/me'),
+                         ('GET', '/admin/api/me/'), ('GET', '/admin//api/me'),
+                         ('GET', '/admin/api/%6de'), ('GET', '/admin/api/me;x=1'),
+                         ('GET', '/admin/api/../api/me'), ('GET', '/admin')]:
+        check('native route boundary: ' + method + ' ' + path, 403,
+              GATEWAY + path, tokens['admin'], method, layer='gateway-policy' if method != 'HEAD' else 'gateway-no-body')
     for label, base in [('gateway', GATEWAY + '/access'), ('direct', ACCESS)]:
         denied = 'gateway-policy' if label == 'gateway' else 'finaccess'
         check(label + ': reader cannot create company', 403,
@@ -230,6 +241,43 @@ def forged_header_checks(tokens):
            and body.get('sampleData') is True and body.get('backend') == 'legacy')
     check('legacy: forged admin header cannot escalate role', 403,
           LEGACY + '/api/admin/summary', tokens['alice'], layer='gateway-policy', extra_headers=spoofed)
+
+
+def native_acl_checks(tokens):
+    """실제 관리 API의 배포 상태와 기본 ACL이 차단한 요청의 로그를 확인합니다."""
+    spec = importlib.util.spec_from_file_location('api7_setup', ROOT / 'scripts/setup-api7.py')
+    setup = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(setup)
+    group = json.loads((setup.PRIVATE / 'group.json').read_text())['id']
+    _, routes = setup.desired()
+    for name, wanted in routes:
+        status, response = setup.call('GET', '/apisix/admin/routes/' + name + '?gateway_group_id=' + group)
+        actual = response.get('value', {})
+        fields = ('paths', 'methods', 'vars', 'priority', 'service_id')
+        same = all(actual.get(k) == wanted.get(k) for k in fields)
+        for plugin in ('acl', 'fault-injection', 'serverless-post-function'):
+            same = same and actual.get('plugins', {}).get(plugin) == wanted['plugins'].get(plugin)
+        record('deployed native policy: ' + name, status == 200 and same)
+    check('native route: query string does not change permission', 200,
+          GATEWAY + '/admin/api/me?display=short', tokens['alice'], layer='finadmin')
+    spoofed = {'X-Userinfo': b64(json.dumps({'sub': 'forged', 'resource_access': {
+        'finadmin-api': {'roles': ['admin']}}}).encode()), 'X-Access-Token': tokens['admin']}
+    check('native ACL: external userinfo and access-token headers cannot grant admin', 403,
+          GATEWAY + '/admin/api/admin/summary', tokens['alice'], extra_headers=spoofed, layer='gateway-policy')
+    record('native ACL: role denial came from the built-in ACL', CHECKS[-1]['nativeAclDenied'])
+    # 무작위 ID라 이번 요청의 로그만 찾을 수 있습니다. 역할에서 막혀 계좌를 생성하지 않습니다.
+    path = '/api/companies/' + str(uuid.uuid4()) + '/accounts'
+    check('native ACL: unique forbidden account request', 403,
+          GATEWAY + '/access' + path, tokens['alice'], 'POST', layer='gateway-policy')
+    deadline, evidence = time.monotonic() + 5, None
+    while evidence is None and time.monotonic() < deadline:
+        output = docker('logs', '--tail', '100', '--since', STARTED.isoformat(), GATEWAY_CONTAINER)
+        evidence = next((line for line in output.splitlines() if path in line
+                         and re.search(r' 403 [0-9.]+ -\s*$', line)), None)
+        if evidence is None:
+            time.sleep(0.2)
+    record('native ACL: denied request never reached upstream', evidence is not None,
+           path=path, upstreamStatus='-' if evidence else None)
 
 
 def ldap_group_checks(values):
@@ -319,7 +367,8 @@ def main():
     config_paths = ('compose.yaml', 'infra/apisix/config.yaml', 'infra/apisix/apisix.yaml',
                     'infra/keycloak/finlab-realm.json', 'infra/gateway/rbac.lua')
     if args.enterprise:
-        config_paths += ('compose.api7.yaml', 'infra/api7/config.yaml', 'scripts/setup-api7.py')
+        config_paths += ('compose.api7.yaml', 'infra/api7/config.yaml', 'scripts/setup-api7.py',
+                         'infra/gateway/enterprise-identity.lua', 'infra/gateway/policies.json')
     configuration = {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in config_paths}
     try:
         values = read_values()
@@ -329,6 +378,8 @@ def main():
         print('준비된 로컬 환경에서 PKCE 로그인과 Gateway RBAC 검증을 시작합니다.', flush=True)
         tokens = {name: login(name, values['LAB_' + name.upper() + '_PASSWORD'])
                   for name in ('alice', 'bob', 'admin', 'outsider')}
+        if args.enterprise:
+            native_acl_checks(tokens)
         short_lived, endpoints = token_checks(values, tokens)
         role_and_method_checks(tokens)
         forged_header_checks(tokens)
