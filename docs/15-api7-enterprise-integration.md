@@ -5,8 +5,7 @@
 ## 실제 제품과 접속 주소
 
 - 관리 콘솔: `https://localhost:7443` — API7 Enterprise 자체 UI입니다.
-- 주 시연 앱: `http://localhost:18091` — Enterprise Gateway를 경유하는 사용자 앱입니다.
-- 비교 앱: `http://localhost:18090` — 이전 Apache APISIX 구성입니다.
+- 주 시연 앱: `http://localhost:18090` — Enterprise Gateway를 경유하는 사용자 앱입니다.
 - Keycloak: `http://localhost:18080`, Realm `finlab`.
 
 Nginx는 로그인·API 호출을 보여 주는 정적 사용자 앱만 제공합니다. API7 관리 UI를 흉내 낸 대시보드를 만들지 않았습니다. 서비스·라우트는 실제 API7 Control Plane에 등록되어 있으며 해당 콘솔에서 확인할 수 있습니다.
@@ -20,7 +19,7 @@ flowchart LR
   B[브라우저] <-->|Code와 PKCE 로그인| K[Keycloak]
   K <-->|User Federation| L[OpenLDAP]
   K --> KD[(Keycloak PostgreSQL)]
-  B -->|Bearer Access Token| G[API7 Enterprise 18091\nJWT 검증과 API RBAC]
+  B -->|Bearer Access Token| G[API7 Enterprise 18090\nJWT 검증과 API RBAC]
   C[API7 관리 UI 7443] -->|설정 배포| G
   G -->|같은 JWT /access| A[FinAccess\nJWT와 역할 재검증]
   G -->|같은 JWT /admin| D[FinAdmin\nJWT와 역할 재검증]
@@ -36,7 +35,7 @@ flowchart LR
 
 ## 등록한 실제 관리 대상
 
-Gateway Group `finlab-rbac`, 전용 컨테이너 `finlab-api7-gateway`, loopback 18091, Nginx worker 1개입니다. 기존 API7의 default 그룹과 Gateway는 변경하지 않았습니다.
+Gateway Group `finlab-rbac`, 전용 컨테이너 `finlab-api7-gateway`, loopback 18090, Nginx worker 1개입니다. 기존 API7의 default 그룹과 Gateway는 변경하지 않았습니다.
 
 | Service와 fallback Route 이름 | 보호하는 경로 | 내부 대상 |
 |---|---|---|
@@ -51,7 +50,7 @@ Gateway Group `finlab-rbac`, 전용 컨테이너 `finlab-api7-gateway`, loopback
 
 ## 이번에 실행한 검증
 
-최종 기본 ACL 설정에서 실제 Enterprise 경유 **156개 검사 통과**, 실패 0개입니다. [최종 통합 검사](verification/api7-native-acl-2026-10-06.json)에는 배포한 18개 Route 조회와 위조 헤더·ACL 로그 검사를 포함합니다. 앞서 별도 실행한 [23개 추가 검사](verification/api7-native-acl-focused-2026-10-06.json)와 이전 Lua RBAC의 [125개 기록](verification/api7-2026-10-06.json)은 과거 결과로 보존하며 최종 156개에 중복 합산하지 않습니다. 모든 기록에서 비밀번호·토큰 원문은 제외했습니다.
+APISIX 제거와 포트 교체 후 **18090의 Enterprise 단일 환경에서 157개 검사 통과**, 실패 0개입니다. [최신 통합 검사](verification/api7-only-2026-10-06.json)에는 기존 APISIX 부재·단일 Gateway 네트워크 확인도 포함됩니다. 이전 포트의 [156개 검사](verification/api7-native-acl-2026-10-06.json), [23개 추가 검사](verification/api7-native-acl-focused-2026-10-06.json), 이전 Lua 구성의 [125개 기록](verification/api7-2026-10-06.json)은 과거 기록으로 보존하며 합산하지 않습니다.
 
 | 사례 | 확인한 결과 |
 |---|---|
@@ -75,9 +74,8 @@ Gateway Group `finlab-rbac`, 전용 컨테이너 `finlab-api7-gateway`, loopback
 기존 로컬 API7 설치와 `.local/api7`의 등록 정보가 준비된 현재 컴퓨터에서 실행합니다.
 
 ```sh
-python3 scripts/render-gateway.py --check
 python3 scripts/setup-api7.py --apply --start
-python3 scripts/verify-gateway-rbac.py --enterprise
+python3 scripts/verify-gateway-rbac.py
 ```
 
 setup은 FinLab 전용 그룹의 서비스·라우트만 갱신합니다. `.local/api7/admin.json`은 현재 관리 계정, `control-plane-ca.pem`은 로컬 인증서, `group.json`은 그룹 식별자, `gateway.env`와 `apisix.uid`는 DP 등록 자료입니다. 다른 컴퓨터는 기존 파일을 Git에서 받는 방식이 아니라, 유효 라이선스와 자체 그룹·인스턴스를 공식 UI에서 준비해야 합니다. 인증서 검증은 끄지 않고 해당 로컬 연결에서만 지정한 공개 인증서를 신뢰합니다.
@@ -88,13 +86,13 @@ setup은 FinLab 전용 그룹의 서비스·라우트만 갱신합니다. `.loca
 
 1. 실제 API7 콘솔에서 `finlab-rbac` 그룹과 위 서비스 네 개를 확인합니다.
 2. 개별 API Route의 openid-connect와 acl 설정을 확인합니다. allow_labels.roles에 허용 역할이 보이며 기본 제품 플러그인이 역할을 비교합니다.
-3. 18091 사용자 앱에서 alice로 로그인하고 관리자 요약 403, 레거시 보고서 200을 확인합니다.
+3. 18090 사용자 앱에서 alice로 로그인하고 관리자 요약 403, 레거시 보고서 200을 확인합니다.
 4. admin으로 로그인하여 관리자 요약과 레거시 관리자 요약 200을 확인합니다.
 5. 검사 JSON의 직접 Spring 403·레거시 네트워크 격리·LDAP 토큰 변화 결과를 설명합니다.
 
 아래 캡처는 **Enterprise를 경유하는 실제 사용자 앱**이며, API7 관리 UI 캡처가 아닙니다.
 
-![Enterprise의 일반 사용자 관리자 요청 차단](images/api7/enterprise-alice-admin-403.jpg)
+![18090 Enterprise에서 일반 사용자 관리자 요청 차단](images/api7/api7-only-alice-403.jpg)
 
 ## 현재 범위와 추가 과제
 

@@ -1,5 +1,7 @@
 # 07. APISIX에서 검사하고, 백엔드에서도 다시 검사하기
 
+> 과거 구성 기록입니다. 2026-10-06부터 FinLab Gateway는 API7 Enterprise(18090) 하나입니다. 현재 설정·실행 방법은 [Enterprise 보고서](15-api7-enterprise-integration.md)를 참고하세요. 아래 과거 실행 결과와 이미지는 당시 상태로 보존합니다.
+
 이번 단계에서는 프런트와 두 백엔드 사이에 **Apache APISIX Gateway**를 둡니다. Gateway는 요청을 먼저 받는 서버입니다. 주소를 보고 요청을 알맞은 백엔드로 보내고, 보내기 전에 JWT를 검사합니다.
 
 기존 Controller를 APISIX 안으로 옮기는 것은 아닙니다. FinAccess와 FinAdmin은 계속 각자 실행되고, 각자 Spring Security로 JWT를 검사합니다. APISIX를 통과했다고 해서 백엔드의 검사를 생략하지 않습니다.

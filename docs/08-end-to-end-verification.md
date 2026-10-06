@@ -1,5 +1,7 @@
 # 08. 실제 로그인부터 두 백엔드와 모의 이체까지 검증하기
 
+> 과거 구성 기록입니다. 2026-10-06부터 FinLab Gateway는 API7 Enterprise(18090) 하나입니다. 현재 설정·실행 방법은 [Enterprise 보고서](15-api7-enterprise-integration.md)를 참고하세요. 아래 과거 실행 결과와 이미지는 당시 상태로 보존합니다.
+
 이 문서는 **개별 코드의 테스트와 실제 서버를 연결한 검증을 구분해서** 기록합니다. 확인일은 2026-09-29입니다.
 
 Keycloak 26.7.4, Apache APISIX 3.18.0, FinAccess, FinAdmin을 Docker로 각각 실행하고 실제 액세스 토큰으로 요청했습니다. 결과는 **HTTP 상태 코드 46개 검사 통과와 이체 후 DB 잔액 확인 성공**입니다. Java 테스트는 FinAccess 149개, FinAdmin 19개가 통과했습니다.

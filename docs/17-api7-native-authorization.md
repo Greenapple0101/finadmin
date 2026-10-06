@@ -41,7 +41,7 @@ Gateway Groups → finlab-rbac → Services → finlab-finadmin-api → Routes �
 
 - 정책은 `infra/gateway/policies.json`에만 작성하고 API7 설정은 `scripts/setup-api7.py`로 등록합니다.
 - Enterprise에서 실행하는 보조 함수는 `enterprise-identity.lua` 43줄입니다. 이전 79줄 RBAC 함수의 경로 탐색·역할 비교·JWT 재해석을 이 구성에서 제거했습니다. 사전 자료형 검사 함수는 별도로 유지합니다.
-- 기존 OSS 비교 환경의 rbac.lua는 남아 있으므로 저장소 전체 코드량이 줄었다는 의미는 아닙니다. 줄인 것은 Enterprise 요청 처리의 사용자 정의 인가 로직입니다.
+- 기존 OSS 컨테이너·설정·RBAC 함수·생성기·OSS 전용 격리 검사 코드를 제거했습니다. Enterprise 설정은 정책표에서 직접 만듭니다. 이전 소스와 실행 기록은 Git 이력으로 남아 있습니다.
 - Spring의 기존 JWT·역할 검사는 그대로입니다. 인증 기능 없는 레거시 때문에 모든 백엔드의 검증을 제거하지 않습니다.
 
 회사 소속 확인, 요청자와 승인자가 같은지, 잔액과 이체 상태 같은 규칙은 업무 DB가 필요하므로 FinAccess에 남깁니다. Keycloak은 사용자·Client Role과 토큰 발급을 담당하고, LDAP 그룹 원본도 유지합니다.
@@ -50,13 +50,13 @@ Gateway Groups → finlab-rbac → Services → finlab-finadmin-api → Routes �
 
 ## 검증 결과
 
-[최종 156개 검사](verification/api7-native-acl-2026-10-06.json)가 모두 통과했습니다.
+[단일 Enterprise 환경 최종 157개 검사](verification/api7-only-2026-10-06.json)가 모두 통과했습니다.
 
 - 토큰 없음·변조·만료·미래 nbf·대상 불일치, 경로/역할/메서드, 원래 URI 우회.
 - 직접 Spring 재검증, 다른 회사 접근, 레거시 격리, LDAP 그룹 변경과 복원.
 - 배포된 18개 Route 조회, 정상 query 요청, 위조 신원 헤더, 기본 ACL 거절 응답과 upstream 미도달 로그.
 
-앞서 별도 실행한 [23개 집중 검사](verification/api7-native-acl-focused-2026-10-06.json)는 중간 검증 기록이며 156개에 중복 합산하지 않습니다. 최종 검사에는 해당 검사를 통합했습니다. LDAP 관리자 그룹도 복원했습니다. 일반 사용자의 고유 계좌 생성 요청이 ACL에서 403으로 끝나고 Gateway 로그의 upstream 상태가 `-`인 것을 확인했으며, 계좌는 생성하지 않았습니다.
+앞서 별도 실행한 [23개 집중 검사](verification/api7-native-acl-focused-2026-10-06.json)는 중간 검증 기록이며 157개에 중복 합산하지 않습니다. 최종 검사에는 해당 검사를 통합했습니다. LDAP 관리자 그룹도 복원했습니다. 일반 사용자의 고유 계좌 생성 요청이 ACL에서 403으로 끝나고 Gateway 로그의 upstream 상태가 `-`인 것을 확인했으며, 계좌는 생성하지 않았습니다.
 
 동일 서명 키의 잘못된 issuer를 Enterprise에서 독립적으로 시험하는 검사는 여전히 추가 과제입니다. 과거 OSS 격리 검사 결과를 Enterprise 결과로 합산하지 않습니다. 운영 TLS·LDAPS·가용성·토큰 즉시 폐기 역시 이번 기본 ACL 전환의 완료 범위에 포함하지 않습니다.
 
@@ -65,9 +65,8 @@ Gateway Groups → finlab-rbac → Services → finlab-finadmin-api → Routes �
 정책 JSON과 Spring의 대응 역할 규칙을 수정하고 보안 검사를 수행한 뒤 아래 명령을 실행합니다.
 
 ```sh
-python3 scripts/render-gateway.py
 python3 scripts/setup-api7.py --apply
-python3 scripts/verify-gateway-rbac.py --enterprise
+python3 scripts/verify-gateway-rbac.py
 ```
 
 setup은 이전 실행의 관리 Route 목록을 로컬에 저장하여 더 이상 쓰지 않는 관리 Route를 정리합니다. 다른 운영자가 만든 Route는 삭제하지 않습니다. 콘솔에서 직접 바꾼 코드 관리 대상은 다음 setup에서 코드 값으로 돌아갑니다. 제품 API를 통한 여러 Route의 업데이트는 하나의 원자적 배포가 아니므로 운영에서는 별도 배포·롤백 절차가 필요합니다.

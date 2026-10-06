@@ -1,0 +1,1579 @@
+{
+  "startedAt": "2026-10-06T06:06:41.590871+00:00",
+  "verifiedAt": "2026-10-06T06:07:53.544687+00:00",
+  "gateway": "http://localhost:18090",
+  "completed": true,
+  "total": 157,
+  "passed": 157,
+  "failed": 0,
+  "checks": [
+    {
+      "case": "deployed native policy: finlab-finaccess-api",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-get-api-hello",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-get-api-me",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-companies",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-get-api-companies-id",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-companies-id-accounts",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-transfers",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-transfers-id-approve",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-transfers-id-reject",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-transfers-id-execute",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finadmin-api",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finadmin-get-api-hello",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finadmin-get-api-me",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finadmin-get-api-admin-summary",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-legacy-api",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-legacy-get-api-reports",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-legacy-get-api-admin-summary",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-frontend",
+      "passed": true
+    },
+    {
+      "case": "native route: query string does not change permission",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/me"
+    },
+    {
+      "case": "native ACL: external userinfo and access-token headers cannot grant admin",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "native ACL: role denial came from the built-in ACL",
+      "passed": true
+    },
+    {
+      "case": "native ACL: unique forbidden account request",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "POST",
+      "path": "/access/api/companies/7c8ea7ae-00a1-496a-9653-b83d528e8306/accounts"
+    },
+    {
+      "case": "native ACL: denied request never reached upstream",
+      "passed": true,
+      "path": "/api/companies/7c8ea7ae-00a1-496a-9653-b83d528e8306/accounts",
+      "upstreamStatus": "-"
+    },
+    {
+      "case": "fixture: Keycloak issued a future nbf",
+      "passed": true
+    },
+    {
+      "case": "fixture: role-free token targets all three APIs",
+      "passed": true
+    },
+    {
+      "case": "fixture: role-free token has no app roles",
+      "passed": true
+    },
+    {
+      "case": "fixture: audience-only client really excludes admin and legacy",
+      "passed": true
+    },
+    {
+      "case": "gateway-access: missing token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": "gateway-token-shape",
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "gateway-access: signature tampering",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "gateway-access: genuinely signed future nbf",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": "gateway-policy",
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "gateway-access: valid token but missing application role",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "gateway-admin: missing token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": "gateway-token-shape",
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway-admin: signature tampering",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway-admin: genuinely signed future nbf",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": "gateway-policy",
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway-admin: valid token but missing application role",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway-legacy: missing token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": "gateway-token-shape",
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "gateway-legacy: signature tampering",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "gateway-legacy: genuinely signed future nbf",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": "gateway-policy",
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "gateway-legacy: valid token but missing application role",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "direct-access: missing token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/me"
+    },
+    {
+      "case": "direct-access: signature tampering",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/me"
+    },
+    {
+      "case": "direct-access: genuinely signed future nbf",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/me"
+    },
+    {
+      "case": "direct-access: valid token but missing application role",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/me"
+    },
+    {
+      "case": "direct-admin: missing token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "direct-admin: signature tampering",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "direct-admin: genuinely signed future nbf",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "direct-admin: valid token but missing application role",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "gateway admin: wrong audience",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway legacy: wrong audience",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "direct admin: wrong audience independently rejected",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "gateway access: correct audience is accepted",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "alice: gateway identity /access",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "alice: gateway identity /admin",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/me"
+    },
+    {
+      "case": "alice: legacy reports",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "alice: admin endpoint /admin",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "alice: admin endpoint /legacy",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "bob: gateway identity /access",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "bob: gateway identity /admin",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/me"
+    },
+    {
+      "case": "bob: legacy reports",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "bob: admin endpoint /admin",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "bob: admin endpoint /legacy",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "admin: gateway identity /access",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "admin: gateway identity /admin",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/me"
+    },
+    {
+      "case": "admin: legacy reports",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "admin: admin endpoint /admin",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "admin: admin endpoint /legacy",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "outsider: gateway identity /access",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "outsider: gateway identity /admin",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/me"
+    },
+    {
+      "case": "outsider: legacy reports",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "outsider: admin endpoint /admin",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "outsider: admin endpoint /legacy",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "gateway: ordinary user independently forbidden",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway: POST is not GET permission",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway: unlisted route denied by default",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/not-configured"
+    },
+    {
+      "case": "direct: ordinary user independently forbidden",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "direct: POST is not GET permission",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "direct: unlisted route denied by default",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/not-configured"
+    },
+    {
+      "case": "legacy: POST reports is denied before upstream",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "native route boundary: HEAD /admin/api/me",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-no-body",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "HEAD",
+      "path": "/admin/api/me"
+    },
+    {
+      "case": "native route boundary: OPTIONS /admin/api/me",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "OPTIONS",
+      "path": "/admin/api/me"
+    },
+    {
+      "case": "native route boundary: GET /admin/api/me/",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/me/"
+    },
+    {
+      "case": "native route boundary: GET /admin//api/me",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin//api/me"
+    },
+    {
+      "case": "native route boundary: GET /admin/api/%6de",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/%6de"
+    },
+    {
+      "case": "native route boundary: GET /admin/api/me;x=1",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/me;x=1"
+    },
+    {
+      "case": "native route boundary: GET /admin/api/../api/me",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/../api/me"
+    },
+    {
+      "case": "native route boundary: GET /admin",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin"
+    },
+    {
+      "case": "gateway: reader cannot create company",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "POST",
+      "path": "/access/api/companies"
+    },
+    {
+      "case": "gateway: admin company request reaches input validation",
+      "passed": true,
+      "expected": 400,
+      "actual": 400,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/access/api/companies"
+    },
+    {
+      "case": "gateway: reader cannot open account",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "POST",
+      "path": "/access/api/companies/0df0872b-94b0-4081-94b3-c932766153c9/accounts"
+    },
+    {
+      "case": "gateway: admin account request reaches missing-company rule",
+      "passed": true,
+      "expected": 404,
+      "actual": 404,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/access/api/companies/0df0872b-94b0-4081-94b3-c932766153c9/accounts"
+    },
+    {
+      "case": "gateway: user transfer request reaches input validation",
+      "passed": true,
+      "expected": 400,
+      "actual": 400,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/access/api/transfers"
+    },
+    {
+      "case": "gateway: approver cannot create transfer without user role",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "POST",
+      "path": "/access/api/transfers"
+    },
+    {
+      "case": "gateway: user cannot approve",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "POST",
+      "path": "/access/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/approve"
+    },
+    {
+      "case": "gateway: approver approve reaches missing-transfer rule",
+      "passed": true,
+      "expected": 404,
+      "actual": 404,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/access/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/approve"
+    },
+    {
+      "case": "gateway: user cannot reject",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "POST",
+      "path": "/access/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/reject"
+    },
+    {
+      "case": "gateway: approver reject reaches missing-transfer rule",
+      "passed": true,
+      "expected": 404,
+      "actual": 404,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/access/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/reject"
+    },
+    {
+      "case": "gateway: user cannot execute",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "POST",
+      "path": "/access/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/execute"
+    },
+    {
+      "case": "gateway: approver execute reaches missing-transfer rule",
+      "passed": true,
+      "expected": 404,
+      "actual": 404,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/access/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/execute"
+    },
+    {
+      "case": "gateway: own company readable",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/companies/20000000-0000-4000-8000-000000000001"
+    },
+    {
+      "case": "gateway: other company denied by backend business rule",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/companies/20000000-0000-4000-8000-000000000002"
+    },
+    {
+      "case": "direct: reader cannot create company",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/companies"
+    },
+    {
+      "case": "direct: admin company request reaches input validation",
+      "passed": true,
+      "expected": 400,
+      "actual": 400,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/companies"
+    },
+    {
+      "case": "direct: reader cannot open account",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/companies/0df0872b-94b0-4081-94b3-c932766153c9/accounts"
+    },
+    {
+      "case": "direct: admin account request reaches missing-company rule",
+      "passed": true,
+      "expected": 404,
+      "actual": 404,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/companies/0df0872b-94b0-4081-94b3-c932766153c9/accounts"
+    },
+    {
+      "case": "direct: user transfer request reaches input validation",
+      "passed": true,
+      "expected": 400,
+      "actual": 400,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/transfers"
+    },
+    {
+      "case": "direct: approver cannot create transfer without user role",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/transfers"
+    },
+    {
+      "case": "direct: user cannot approve",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/approve"
+    },
+    {
+      "case": "direct: approver approve reaches missing-transfer rule",
+      "passed": true,
+      "expected": 404,
+      "actual": 404,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/approve"
+    },
+    {
+      "case": "direct: user cannot reject",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/reject"
+    },
+    {
+      "case": "direct: approver reject reaches missing-transfer rule",
+      "passed": true,
+      "expected": 404,
+      "actual": 404,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/reject"
+    },
+    {
+      "case": "direct: user cannot execute",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/execute"
+    },
+    {
+      "case": "direct: approver execute reaches missing-transfer rule",
+      "passed": true,
+      "expected": 404,
+      "actual": 404,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "POST",
+      "path": "/api/transfers/0df0872b-94b0-4081-94b3-c932766153c9/execute"
+    },
+    {
+      "case": "direct: own company readable",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/companies/20000000-0000-4000-8000-000000000001"
+    },
+    {
+      "case": "direct: other company denied by backend business rule",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/companies/20000000-0000-4000-8000-000000000002"
+    },
+    {
+      "case": "legacy: external identity headers replaced by verified token claims",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "legacy: response subject and issuer belong to signed identity",
+      "passed": true
+    },
+    {
+      "case": "legacy: forged admin header cannot escalate role",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "network: legacy and web services are running",
+      "passed": true
+    },
+    {
+      "case": "network: legacy publishes no host port",
+      "passed": true
+    },
+    {
+      "case": "network: legacy belongs to one isolated network",
+      "passed": true
+    },
+    {
+      "case": "network: API7 Enterprise is the only FinLab gateway",
+      "passed": true
+    },
+    {
+      "case": "network: Enterprise gateway has expected Compose ownership",
+      "passed": true
+    },
+    {
+      "case": "network: private network is internal and has only gateway plus legacy",
+      "passed": true
+    },
+    {
+      "case": "network: web is outside the private network",
+      "passed": true
+    },
+    {
+      "case": "network: web cannot call legacy health endpoint by container IP",
+      "passed": true
+    },
+    {
+      "case": "network: legacy container is healthy during isolation test",
+      "passed": true
+    },
+    {
+      "case": "ldap-alice: LDAP group becomes legacy client role",
+      "passed": true
+    },
+    {
+      "case": "ldap-alice: LDAP identity reads legacy report",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "ldap-bob: LDAP group becomes legacy client role",
+      "passed": true
+    },
+    {
+      "case": "ldap-bob: LDAP identity reads legacy report",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "ldap-admin: LDAP group becomes legacy client role",
+      "passed": true
+    },
+    {
+      "case": "ldap-admin: LDAP identity reads legacy report",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "ldap-outsider: LDAP group becomes legacy client role",
+      "passed": true
+    },
+    {
+      "case": "ldap-outsider: LDAP identity reads legacy report",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "gateway admin: LDAP admin before removal",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway legacy: LDAP admin before removal",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "direct admin: LDAP admin before removal",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "LDAP removal: new token loses admin in both APIs",
+      "passed": true
+    },
+    {
+      "case": "gateway admin: removed member new token denied",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway admin: old unexpired token still allowed",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway legacy: removed member new token denied",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "gateway legacy: old unexpired token still allowed",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "direct admin: removed member new token denied",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "direct admin: old unexpired token still allowed",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "LDAP restoration: new token restores admin in both APIs",
+      "passed": true
+    },
+    {
+      "case": "gateway admin: restored member new token allowed",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway legacy: restored member new token allowed",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "legacy",
+      "backend": "legacy",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/admin/summary"
+    },
+    {
+      "case": "direct admin: restored member new token allowed",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "gateway-access: genuinely signed expired token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/access/api/me"
+    },
+    {
+      "case": "gateway-admin: genuinely signed expired token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "gateway-legacy: genuinely signed expired token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "gateway-jwt",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/reports"
+    },
+    {
+      "case": "direct-access: genuinely signed expired token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finaccess",
+      "backend": "finaccess",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/me"
+    },
+    {
+      "case": "direct-admin: genuinely signed expired token",
+      "passed": true,
+      "expected": 401,
+      "actual": 401,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/api/admin/summary"
+    },
+    {
+      "case": "log evidence: unique unlisted legacy route denied",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/legacy/api/verify-denied-5af6859aa0014603aa696cfe337d32ec"
+    },
+    {
+      "case": "log evidence: gateway denial has no upstream status",
+      "passed": true,
+      "evidence": {
+        "method": "GET",
+        "path": "/legacy/api/verify-denied-5af6859aa0014603aa696cfe337d32ec",
+        "status": "403",
+        "upstream": "-"
+      }
+    },
+    {
+      "case": "log evidence: company denial comes from upstream 403",
+      "passed": true,
+      "evidence": {
+        "method": "GET",
+        "path": "/access/api/companies/20000000-0000-4000-8000-000000000002",
+        "status": "403",
+        "upstream": "403"
+      }
+    },
+    {
+      "case": "configuration: checked files stayed unchanged during verification",
+      "passed": true
+    }
+  ],
+  "configurationSha256": {
+    "compose.yaml": "d3dd08a18bcad752bd47205fb1755f924d9be305177d2f1f94ca1a7f9970a99e",
+    "compose.api7.yaml": "5c02ee9d188e1655d49b547fbbd43a625e4c21e1b46baaed39677d33911aad85",
+    "infra/api7/config.yaml": "c9ac80882de50482e8f45afa616920216259b063447748d2022cefc5b63e3f11",
+    "infra/keycloak/finlab-realm.json": "7a2782a5e742ef6d9a3d9193b026def2352429ec778e461936b2a08eb524cfdc",
+    "scripts/setup-api7.py": "6ca67d3f062156ab1223082a0e4acd756cedcaa0d8bbcba8cf868fbf9da0c36d",
+    "infra/gateway/enterprise-identity.lua": "b8545cdfa2cfebc58a1394ff8c954f1e8f56753bb27ab013dbd83a3682e2d2e2",
+    "infra/gateway/token-shape.lua": "c3b30f03af66bd8f176c6dc388a07ba36715deb7206fa5008675e4b918120fc9",
+    "infra/gateway/policies.json": "0f1cc9db551e8e793205ddb89b653674765d66fbd9656d8d22e50debf05d5d0b"
+  },
+  "notCoveredHere": [
+    "잘못된 issuer의 유효 서명 토큰: 별도 격리 fixture에서 검증"
+  ],
+  "note": "실제 PKCE 로그인. 업무 데이터 생성 없음. LDAP 그룹은 finally에서 복원. 비밀번호·토큰 원문 없음."
+}

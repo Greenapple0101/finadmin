@@ -1,5 +1,7 @@
 # FinLab 인증·인가 아키텍처
 
+> 과거 구성 기록입니다. 2026-10-06부터 FinLab Gateway는 API7 Enterprise(18090) 하나입니다. 현재 설정·실행 방법은 [Enterprise 보고서](15-api7-enterprise-integration.md)를 참고하세요. 아래 과거 실행 결과와 이미지는 당시 상태로 보존합니다.
+
 > 이 그림과 본문은 2026-09-29의 LDAP 추가 전 구조입니다. 2026-10-01에 Keycloak → OpenLDAP 연결을 추가했습니다. 현재 외부 직원 로그인·그룹·역할 흐름은 [LDAP 실습 보고서](13-ldap-federation-hands-on.md)를 함께 읽으세요.
 
 ![FinLab 인증·인가 아키텍처](images/finlab-architecture.png)

@@ -1,5 +1,7 @@
 # OpenLDAP → Keycloak → JWT → 두 Spring 앱 실습 보고서
 
+> 과거 구성 기록입니다. 2026-10-06부터 FinLab Gateway는 API7 Enterprise(18090) 하나입니다. 현재 설정·실행 방법은 [Enterprise 보고서](15-api7-enterprise-integration.md)를 참고하세요. 아래 과거 실행 결과와 이미지는 당시 상태로 보존합니다.
+
 작성일: 2026-10-01 · 대상: 처음 LDAP와 User Federation을 배우는 사람
 
 이 문서는 개념 제안서가 아니라 실제 FinLab에 추가한 설정과 실행 결과를 설명합니다. 기존 내부 사용자 `alice / bob / admin / outsider`는 유지하고, LDAP 사용자 `ldap-alice / ldap-bob / ldap-admin / ldap-outsider`를 추가했습니다. Windows Active Directory는 설치하지 않았습니다.

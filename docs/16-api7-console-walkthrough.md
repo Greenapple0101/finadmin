@@ -6,7 +6,11 @@
 
 Chrome에서 `https://localhost:7443`을 엽니다. 현재 관리 계정의 최초 비밀번호 변경과 로그인을 완료했습니다. Codex 내장 브라우저의 인증서 오류와 Chrome의 로그인 상태는 별개입니다.
 
-`http://localhost:18091`은 사용자가 로그인하고 API를 시험하는 앱입니다. 설정을 관리하는 제품 콘솔은 7443입니다. API7은 Control Plane에 설정을 저장하고, Gateway 인스턴스가 그 설정으로 실제 요청을 처리합니다.
+`http://localhost:18090`은 사용자가 로그인하고 API를 시험하는 앱입니다. 설정을 관리하는 제품 콘솔은 7443입니다. API7은 Control Plane에 설정을 저장하고, Gateway 인스턴스가 그 설정으로 실제 요청을 처리합니다.
+
+사용자 앱의 로그인 버튼은 실제 Keycloak 화면으로 이동합니다. 로그인 완료 후에는 API7의 18090 화면으로 돌아옵니다. API7 관리 콘솔의 운영자 로그인은 현재 별도 관리 계정을 사용합니다.
+
+![실제 Keycloak 사용자 로그인 화면](images/api7/keycloak-login-api7-only.jpg)
 
 ## 2. Gateway Group과 Service
 
@@ -41,7 +45,7 @@ View는 읽기 전용 확인입니다. 여기서는 요청에 실린 Bearer Acce
 | match_with_client_id: true | audience가 이 Route의 Client ID와 맞아야 합니다. |
 | issuer.valid_issuers | 우리가 신뢰하는 finlab Realm의 발급자인지 검사합니다. |
 
-FinAdmin Route의 대상은 `finadmin-api`입니다. 이 대상 검사를 통과했다고 관리자 권한까지 생기지는 않습니다. 다음 역할 검사도 통과해야 합니다. 전체 생성 설정은 `scripts/setup-api7.py`와 `scripts/render-gateway.py`에서 확인합니다.
+FinAdmin Route의 대상은 `finadmin-api`입니다. 이 대상 검사를 통과했다고 관리자 권한까지 생기지는 않습니다. 다음 역할 검사도 통과해야 합니다. 전체 생성 설정은 `scripts/setup-api7.py`에서 확인합니다.
 
 ## 4. Route에서 역할 검사 찾기
 
@@ -68,12 +72,12 @@ Spring에는 원래 Bearer JWT가 전달됩니다. Spring도 서명·발급자·
 ## 6. 화면과 결과를 연결하는 짧은 시연
 
 1. 콘솔에서 위 Service와 Route의 OIDC·역할 플러그인을 보여 줍니다.
-2. 별도 18091 사용자 앱에서 일반 사용자로 관리자 요약을 요청합니다. 예상 결과는 Gateway 403입니다.
+2. 별도 18090 사용자 앱에서 일반 사용자로 관리자 요약을 요청합니다. 예상 결과는 Gateway 403입니다.
 3. 관리자로 같은 요청을 보냅니다. 예상 결과는 Spring 200입니다.
 4. [검증 기록](verification/api7-2026-10-06.json)에서 직접 Spring 호출도 역할을 검사하는 사례를 보여 줍니다.
 5. LDAP 그룹 제거 후 기존 토큰은 200, 새 토큰은 403이었던 기록을 비교합니다. 이번 검증 종료 시 그룹은 복원했습니다.
 
-최종 기본 ACL 설정에서 배포 확인을 포함한 통합 검사 156개가 통과했습니다. 화면에 플러그인이 보이는 사실과 실제 요청이 차단되는 사실을 구분해 설명하세요. [구현 보고서](15-api7-enterprise-integration.md)에 이번 검사 범위와 추가 과제를 적었습니다.
+최종 기본 ACL 설정에서 배포 확인을 포함한 통합 검사 157개가 통과했습니다. 화면에 플러그인이 보이는 사실과 실제 요청이 차단되는 사실을 구분해 설명하세요. [구현 보고서](15-api7-enterprise-integration.md)에 이번 검사 범위와 추가 과제를 적었습니다.
 
 ## 자주 헷갈리는 부분
 

@@ -1,5 +1,7 @@
 # Keycloak · Apache APISIX · Spring Resource Server 인증·인가 검증
 
+> 과거 구성 기록입니다. 2026-10-06부터 FinLab Gateway는 API7 Enterprise(18090) 하나입니다. 현재 설정·실행 방법은 [Enterprise 보고서](15-api7-enterprise-integration.md)를 참고하세요. 아래 과거 실행 결과와 이미지는 당시 상태로 보존합니다.
+
 작성일: 2026-09-29 · LDAP 확장 업데이트: 2026-10-01
 저장소: [FinAccess](https://github.com/Greenapple0101/finaccess), [FinAdmin](https://github.com/Greenapple0101/finadmin)
 
