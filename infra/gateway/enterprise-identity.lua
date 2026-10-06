@@ -1,7 +1,6 @@
 -- API7의 OIDC가 검증한 결과만 사용합니다. 여기서 JWT를 다시 디코딩하지 않습니다.
 -- 경로·메서드는 Route가, 허용 역할 비교는 기본 acl 플러그인이 담당합니다.
 return function(conf, ctx)
-  local core = require("apisix.core")
   local claims = ctx.external_user
   local function reject(code, message)
     ngx.header["X-Finlab-Rejected-By"] = "gateway-policy"
@@ -30,14 +29,5 @@ return function(conf, ctx)
   for _, name in ipairs({"X-Finlab-Subject", "X-Finlab-Issuer", "X-Finlab-Roles",
       "X-Userinfo", "X-ID-Token", "X-Access-Token", "X-Refresh-Token", "X-Raw-ID-Token"}) do
     ngx.req.clear_header(name)
-  end
-  if __LEGACY__ then
-    -- 레거시에만 검증된 신원을 전달합니다. 내부 네트워크 격리가 신뢰의 전제입니다.
-    if claims.sub:find("[%c]") or type(claims.iss) ~= "string" or claims.iss:find("[%c]") then
-      return reject(401, "Identity cannot be forwarded")
-    end
-    core.request.set_header(ctx, "X-Finlab-Subject", claims.sub)
-    core.request.set_header(ctx, "X-Finlab-Issuer", claims.iss)
-    ngx.req.clear_header("Authorization")
   end
 end

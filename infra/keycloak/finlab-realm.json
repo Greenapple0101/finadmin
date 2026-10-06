@@ -29,14 +29,6 @@
         {
           "name": "admin"
         }
-      ],
-      "finlegacy-api": [
-        {
-          "name": "reader"
-        },
-        {
-          "name": "admin"
-        }
       ]
     }
   },
@@ -51,14 +43,6 @@
     },
     {
       "clientId": "finadmin-api",
-      "enabled": true,
-      "protocol": "openid-connect",
-      "bearerOnly": true,
-      "standardFlowEnabled": false,
-      "directAccessGrantsEnabled": false
-    },
-    {
-      "clientId": "finlegacy-api",
       "enabled": true,
       "protocol": "openid-connect",
       "bearerOnly": true,
@@ -134,31 +118,6 @@
           "config": {
             "usermodel.clientRoleMapping.clientId": "finadmin-api",
             "claim.name": "resource_access.finadmin-api.roles",
-            "jsonType.label": "String",
-            "multivalued": "true",
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "userinfo.token.claim": "false"
-          }
-        },
-        {
-          "name": "audience-finlegacy-api",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-audience-mapper",
-          "consentRequired": false,
-          "config": {
-            "included.client.audience": "finlegacy-api",
-            "id.token.claim": "false",
-            "access.token.claim": "true"
-          }
-        },
-        {
-          "name": "finlegacy-api-roles",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-client-role-mapper",
-          "config": {
-            "usermodel.clientRoleMapping.clientId": "finlegacy-api",
-            "claim.name": "resource_access.finlegacy-api.roles",
             "jsonType.label": "String",
             "multivalued": "true",
             "access.token.claim": "true",
@@ -311,31 +270,6 @@
             "id.token.claim": "false",
             "userinfo.token.claim": "false"
           }
-        },
-        {
-          "name": "audience-finlegacy-api",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-audience-mapper",
-          "consentRequired": false,
-          "config": {
-            "included.client.audience": "finlegacy-api",
-            "id.token.claim": "false",
-            "access.token.claim": "true"
-          }
-        },
-        {
-          "name": "finlegacy-api-roles",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-client-role-mapper",
-          "config": {
-            "usermodel.clientRoleMapping.clientId": "finlegacy-api",
-            "claim.name": "resource_access.finlegacy-api.roles",
-            "jsonType.label": "String",
-            "multivalued": "true",
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "userinfo.token.claim": "false"
-          }
         }
       ]
     },
@@ -426,31 +360,6 @@
             "access.token.claim": "true",
             "id.token.claim": "false"
           }
-        },
-        {
-          "name": "audience-finlegacy-api",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-audience-mapper",
-          "consentRequired": false,
-          "config": {
-            "included.client.audience": "finlegacy-api",
-            "id.token.claim": "false",
-            "access.token.claim": "true"
-          }
-        },
-        {
-          "name": "finlegacy-api-roles",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-client-role-mapper",
-          "config": {
-            "usermodel.clientRoleMapping.clientId": "finlegacy-api",
-            "claim.name": "resource_access.finlegacy-api.roles",
-            "jsonType.label": "String",
-            "multivalued": "true",
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "userinfo.token.claim": "false"
-          }
         }
       ]
     },
@@ -501,17 +410,6 @@
             "id.token.claim": "false",
             "access.token.claim": "true"
           }
-        },
-        {
-          "name": "audience-finlegacy-api",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-audience-mapper",
-          "consentRequired": false,
-          "config": {
-            "included.client.audience": "finlegacy-api",
-            "id.token.claim": "false",
-            "access.token.claim": "true"
-          }
         }
       ]
     }
@@ -538,9 +436,6 @@
         ],
         "finadmin-api": [
           "user"
-        ],
-        "finlegacy-api": [
-          "reader"
         ]
       }
     },
@@ -565,9 +460,6 @@
         ],
         "finadmin-api": [
           "user"
-        ],
-        "finlegacy-api": [
-          "reader"
         ]
       }
     },
@@ -594,9 +486,6 @@
         ],
         "finadmin-api": [
           "admin"
-        ],
-        "finlegacy-api": [
-          "admin"
         ]
       }
     },
@@ -621,9 +510,6 @@
         ],
         "finadmin-api": [
           "user"
-        ],
-        "finlegacy-api": [
-          "reader"
         ]
       }
     }

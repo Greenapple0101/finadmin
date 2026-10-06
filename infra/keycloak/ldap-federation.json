@@ -137,9 +137,6 @@
       ],
       "finadmin-api": [
         "user"
-      ],
-      "finlegacy-api": [
-        "reader"
       ]
     },
     "approvers": {
@@ -148,9 +145,6 @@
       ],
       "finadmin-api": [
         "user"
-      ],
-      "finlegacy-api": [
-        "reader"
       ]
     },
     "admins": {
@@ -160,9 +154,6 @@
         "admin"
       ],
       "finadmin-api": [
-        "admin"
-      ],
-      "finlegacy-api": [
         "admin"
       ]
     }

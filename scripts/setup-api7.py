@@ -68,7 +68,7 @@ def desired():
                     'issuer': {'valid_issuers': ['http://localhost:18080/realms/finlab']},
                     'audience': {'claim': 'aud', 'required': True, 'match_with_client_id': True}}},
             'serverless-post-function': {'phase': 'rewrite', 'functions': [identity.replace(
-                '__AUDIENCE__', policy['audience']).replace('__LEGACY__', str(app == 'legacy').lower())]},
+                '__AUDIENCE__', policy['audience'])]},
             'proxy-rewrite': {'regex_uri': ['^' + policy['prefix'] + '/(.*)$', '/$1']},
             'response-rewrite': {'headers': {'set': {
                 'X-Finlab-Gateway': 'api7-enterprise', 'X-Finlab-Upstream': app}}}}

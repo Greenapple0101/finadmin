@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gateway RBAC, Spring의 독립 검사, 레거시 신뢰 경계를 실제 요청으로 확인합니다.
+"""Gateway RBAC, 두 Spring 백엔드의 독립 검사를 실제 요청으로 확인합니다.
 
 준비된 로컬 환경을 대상으로 합니다. 회사·계좌·이체 데이터는 만들지 않습니다.
 LDAP 관리자 그룹만 잠시 변경하고 finally에서 복원합니다. 토큰은 메모리에서만 씁니다.
@@ -23,8 +23,7 @@ from verify import ROOT, ISSUER, GATEWAY, ACCESS, ADMIN, b64, claims, http, logi
 
 CHECKS = []
 STARTED = datetime.now(timezone.utc)
-LEGACY = GATEWAY + '/legacy'
-APIS = ('finaccess-api', 'finadmin-api', 'finlegacy-api')
+APIS = ('finaccess-api', 'finadmin-api')
 REPORT_PATH = ROOT / '.local/api7-verification.json'
 GATEWAY_CONTAINER = 'finlab-api7-gateway'
 
@@ -90,18 +89,6 @@ def docker(*arguments, timeout=30):
 
 
 def network_checks():
-    ids = {name: docker('compose', 'ps', '-q', name).strip() for name in ('legacy', 'web')}
-    record('network: legacy and web services are running', all(ids.values()))
-    info = {name: json.loads(docker('inspect', container))[0] for name, container in ids.items()}
-    legacy = info['legacy']
-    # EXPOSE와 호스트 포트 공개는 다릅니다. PortBindings가 비어 있는지 확인합니다.
-    bindings = legacy['HostConfig'].get('PortBindings') or {}
-    published = legacy['NetworkSettings'].get('Ports') or {}
-    record('network: legacy publishes no host port', not bindings and not any(published.values()))
-    networks = legacy['NetworkSettings']['Networks']
-    record('network: legacy belongs to one isolated network', len(networks) == 1)
-    network_name, address = next(iter(networks.items()))
-    network = json.loads(docker('network', 'inspect', network_name))[0]
     enterprise_ids = docker('ps', '-q', '--filter', 'name=^/finlab-api7-gateway$').strip()
     record('network: API7 Enterprise is the only FinLab gateway',
            bool(enterprise_ids) and not docker('ps', '-aq', '--filter', 'name=^/finlab-apisix-1$').strip())
@@ -110,21 +97,11 @@ def network_checks():
     record('network: Enterprise gateway has expected Compose ownership',
            labels.get('com.docker.compose.project') == 'finlab-api7'
            and labels.get('com.docker.compose.service') == 'gateway')
-    allowed = {ids['legacy'], enterprise['Id']}
-    record('network: private network is internal and has only gateway plus legacy',
-           network.get('Internal') is True and set(network.get('Containers', {})) == allowed)
-    record('network: web is outside the private network',
-           network_name not in info['web']['NetworkSettings']['Networks'])
-    # DNSで見つからないだけでは隔離の証明が弱いので、レガシーの実IPを指定します。
-    # /healthzには認証がないため、到達できたら必ず200になります。
-    probe = subprocess.run(['docker', 'compose', 'exec', '-T', 'web',
-        'wget', '-q', '-T', '3', '-O', '/dev/null',
-        'http://' + address['IPAddress'] + ':8082/healthz'],
-        cwd=ROOT, text=True, capture_output=True, timeout=10)
-    record('network: web cannot call legacy health endpoint by container IP', probe.returncode != 0)
-    # サーバー停止を誤って「隔離成功」と判断しないため、生存も別経路で確認します。
-    record('network: legacy container is healthy during isolation test',
-           json.loads(docker('inspect', ids['legacy']))[0]['State']['Health']['Status'] == 'healthy')
+    record('network: Enterprise serves only loopback port 18090',
+           enterprise['HostConfig']['PortBindings'].get('9080/tcp') == [
+               {'HostIp': '127.0.0.1', 'HostPort': '18090'}])
+    record('network: Enterprise connects to control plane and application networks',
+           set(enterprise['NetworkSettings']['Networks']) == {'api7-ee_api7', 'finlab_default'})
 
 
 def token_checks(values, tokens):
@@ -138,12 +115,12 @@ def token_checks(values, tokens):
     no_roles = login('admin', password, 'finlab-no-roles-test')
     access_only = login('admin', password, 'finlab-access-test')
     record('fixture: Keycloak issued a future nbf', claims(future).get('nbf', 0) > time.time() + 120)
-    record('fixture: role-free token targets all three APIs',
+    record('fixture: role-free token targets both APIs',
            set(APIS).issubset(set(claims(no_roles).get('aud', []))))
     record('fixture: role-free token has no app roles', all(
         not claims(no_roles).get('resource_access', {}).get(api, {}).get('roles') for api in APIS))
     access_audience = claims(access_only).get('aud', [])
-    record('fixture: audience-only client really excludes admin and legacy',
+    record('fixture: audience-only client really excludes admin',
            access_audience == 'finaccess-api' or access_audience == ['finaccess-api'])
 
     # 이 경우만 payload를 고칩니다. 목적이 '서명 변조 거절'이기 때문입니다.
@@ -155,7 +132,6 @@ def token_checks(values, tokens):
     endpoints = [
         ('gateway-access', GATEWAY + '/access/api/me', 'gateway-jwt'),
         ('gateway-admin', GATEWAY + '/admin/api/admin/summary', 'gateway-jwt'),
-        ('gateway-legacy', LEGACY + '/api/reports', 'gateway-jwt'),
         ('direct-access', ACCESS + '/api/me', 'finaccess'),
         ('direct-admin', ADMIN + '/api/admin/summary', 'finadmin'),
     ]
@@ -167,7 +143,6 @@ def token_checks(values, tokens):
               layer='gateway-policy' if label.startswith('gateway') else layer)
     check('gateway admin: wrong audience', 403, GATEWAY + '/admin/api/admin/summary', access_only,
           layer='gateway-jwt')
-    check('gateway legacy: wrong audience', 403, LEGACY + '/api/reports', access_only, layer='gateway-jwt')
     check('direct admin: wrong audience independently rejected', 401,
           ADMIN + '/api/admin/summary', access_only, layer='finadmin')
     check('gateway access: correct audience is accepted', 200,
@@ -182,12 +157,10 @@ def role_and_method_checks(tokens):
         for prefix, layer in [('/access', 'finaccess'), ('/admin', 'finadmin')]:
             check(name + ': gateway identity ' + prefix, 200,
                   GATEWAY + prefix + '/api/me', tokens[name], layer=layer)
-        check(name + ': legacy reports', 200, LEGACY + '/api/reports', tokens[name], layer='legacy')
-        for prefix in ('/admin', '/legacy'):
-            allowed = name == 'admin'
-            check(name + ': admin endpoint ' + prefix, 200 if allowed else 403,
-                  GATEWAY + prefix + '/api/admin/summary', tokens[name],
-                  layer=('finadmin' if prefix == '/admin' else 'legacy') if allowed else 'gateway-policy')
+        allowed = name == 'admin'
+        check(name + ': admin endpoint', 200 if allowed else 403,
+              GATEWAY + '/admin/api/admin/summary', tokens[name],
+              layer='finadmin' if allowed else 'gateway-policy')
     for label, base in [('gateway', GATEWAY + '/admin'), ('direct', ADMIN)]:
         layer = 'gateway-policy' if label == 'gateway' else 'finadmin'
         check(label + ': ordinary user independently forbidden', 403,
@@ -196,8 +169,6 @@ def role_and_method_checks(tokens):
               base + '/api/admin/summary', tokens['admin'], 'POST', layer=layer)
         check(label + ': unlisted route denied by default', 403,
               base + '/api/not-configured', tokens['admin'], layer=layer)
-    check('legacy: POST reports is denied before upstream', 403,
-          LEGACY + '/api/reports', tokens['admin'], 'POST', layer='gateway-policy')
     for method, path in [('HEAD', '/admin/api/me'), ('OPTIONS', '/admin/api/me'),
                          ('GET', '/admin/api/me/'), ('GET', '/admin//api/me'),
                          ('GET', '/admin/api/%6de'), ('GET', '/admin/api/me;x=1'),
@@ -232,15 +203,13 @@ def role_and_method_checks(tokens):
 
 def forged_header_checks(tokens):
     spoofed = {'X-Finlab-Subject': 'forged-person', 'X-Finlab-Issuer': 'https://forged.invalid',
-               'X-Finlab-Roles': 'admin', 'X-Finlab-Backend': 'finadmin',
-               'X-Finlab-Rejected-By': 'gateway-policy'}
-    body = check('legacy: external identity headers replaced by verified token claims', 200,
-                 LEGACY + '/api/reports', tokens['alice'], layer='legacy', extra_headers=spoofed)
-    record('legacy: response subject and issuer belong to signed identity',
-           body.get('subject') == claims(tokens['alice'])['sub'] and body.get('issuer') == ISSUER
-           and body.get('sampleData') is True and body.get('backend') == 'legacy')
-    check('legacy: forged admin header cannot escalate role', 403,
-          LEGACY + '/api/admin/summary', tokens['alice'], layer='gateway-policy', extra_headers=spoofed)
+               'X-Finlab-Roles': 'admin'}
+    for prefix, layer in [('/access', 'finaccess'), ('/admin', 'finadmin')]:
+        body = check(layer + ': signed identity wins over forged headers', 200,
+                     GATEWAY + prefix + '/api/me', tokens['alice'], layer=layer, extra_headers=spoofed)
+        record(layer + ': subject and issuer come from JWT',
+               body.get('sub', body.get('subject')) == claims(tokens['alice'])['sub']
+               and body.get('issuer') == ISSUER)
 
 
 def native_acl_checks(tokens):
@@ -288,14 +257,14 @@ def ldap_group_checks(values):
     spec.loader.exec_module(helper)
     for name, (password_key, _, group) in LDAP_USERS.items():
         token = login(name, values[password_key])
-        expected = 'admin' if group == 'admins' else 'reader'
-        record(name + ': LDAP group becomes legacy client role',
-               expected in claims(token).get('resource_access', {}).get('finlegacy-api', {}).get('roles', []))
-        check(name + ': LDAP identity reads legacy report', 200,
-              LEGACY + '/api/reports', token, layer='legacy')
+        mapping = json.loads((ROOT / 'infra/keycloak/ldap-federation.json').read_text())['groupRoles'][group]
+        for app, roles in mapping.items():
+            record(name + ': LDAP group becomes ' + app + ' roles',
+                   set(roles).issubset(set(claims(token).get('resource_access', {}).get(app, {}).get('roles', []))))
+        check(name + ': LDAP identity reads FinAdmin profile', 200,
+              GATEWAY + '/admin/api/me', token, layer='finadmin')
     original = login('ldap-admin', values['LDAP_ADMIN_USER_PASSWORD'])
     endpoints = [('gateway admin', GATEWAY + '/admin/api/admin/summary', 'finadmin'),
-                 ('gateway legacy', LEGACY + '/api/admin/summary', 'legacy'),
                  ('direct admin', ADMIN + '/api/admin/summary', 'finadmin')]
     for label, url, layer in endpoints:
         check(label + ': LDAP admin before removal', 200, url, original, layer=layer)
@@ -305,7 +274,7 @@ def ldap_group_checks(values):
         reduced = login('ldap-admin', values['LDAP_ADMIN_USER_PASSWORD'])
         record('LDAP removal: new token loses admin in both APIs', all(
             'admin' not in claims(reduced).get('resource_access', {}).get(api, {}).get('roles', [])
-            for api in ('finadmin-api', 'finlegacy-api')))
+            for api in APIS))
         for label, url, layer in endpoints:
             check(label + ': removed member new token denied', 403, url, reduced,
                   layer='gateway-policy' if label.startswith('gateway') else layer)
@@ -315,7 +284,7 @@ def ldap_group_checks(values):
     restored = login('ldap-admin', values['LDAP_ADMIN_USER_PASSWORD'])
     record('LDAP restoration: new token restores admin in both APIs', all(
         'admin' in claims(restored).get('resource_access', {}).get(api, {}).get('roles', [])
-        for api in ('finadmin-api', 'finlegacy-api')))
+        for api in APIS))
     for label, url, layer in endpoints:
         check(label + ': restored member new token allowed', 200, url, restored, layer=layer)
 
@@ -323,8 +292,8 @@ def ldap_group_checks(values):
 def access_log_checks(token):
     # 로그에 고유한 경로를 남겨 이전 실행의 403을 이번 결과로 잘못 재사용하지 않습니다.
     unique = '/api/verify-denied-' + uuid.uuid4().hex
-    check('log evidence: unique unlisted legacy route denied', 403,
-          LEGACY + unique, token, layer='gateway-policy')
+    check('log evidence: unique unlisted admin route denied', 403,
+          GATEWAY + '/admin' + unique, token, layer='gateway-policy')
     pattern = re.compile(r'\] (?P<method>[A-Z]+) (?P<path>/\S*) (?P<status>\d{3}) '
                          r'(?P<seconds>[0-9.]+) (?P<upstream>[0-9, :\-]+)\s*$')
     # 응답이 먼저 도착하고 버퍼에 있던 접근 로그가 조금 뒤에 출력될 수 있습니다.

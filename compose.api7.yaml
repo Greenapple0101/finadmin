@@ -11,7 +11,7 @@ services:
     volumes:
       - ./infra/api7/config.yaml:/usr/local/apisix/conf/config.yaml:ro
       - ./.local/api7/apisix.uid:/usr/local/apisix/conf/apisix.uid
-    networks: [control, applications, legacy_private]
+    networks: [control, applications]
     labels:
       finlab.role: gateway
       finlab.gateway: api7
@@ -23,6 +23,3 @@ networks:
   applications:
     external: true
     name: finlab_default
-  legacy_private:
-    external: true
-    name: finlab_legacy_private

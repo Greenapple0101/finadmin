@@ -112,19 +112,7 @@ services:
       - ./frontend:/usr/share/nginx/html:ro
       - ./infra/web.conf:/etc/nginx/conf.d/default.conf:ro
 
-  # JWT 검증을 추가할 수 없는 기존 앱을 흉내 냅니다. 호스트에 포트를 공개하지 않습니다.
-  legacy:
-    build: ./infra/legacy
-    networks: [legacy_private]
-    read_only: true
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
-
 volumes:
   ldap_data:
   keycloak_data:
   app_data:
-
-networks:
-  legacy_private:
-    internal: true
