@@ -14,6 +14,10 @@ Nginx는 로그인·API 호출을 보여 주는 정적 사용자 앱만 제공�
 
 ## 아키텍처
 
+![현재 API7 Enterprise 아키텍처](images/finlab-api7-enterprise-architecture.png)
+
+그림의 시간 검증에는 기본 OIDC와 엄격한 exp·nbf 보조 검사가 포함됩니다. 관리 UI에서 Gateway로 향하는 선은 Control Plane을 통한 설정 배포를 요약한 것입니다.
+
 ```mermaid
 flowchart LR
   B[브라우저] <-->|Code와 PKCE 로그인| K[Keycloak]

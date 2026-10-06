@@ -8,6 +8,8 @@ Keycloak에서 발급받은 액세스 토큰을 API7 Enterprise가 검사하고 
 
 사용자 로그인은 **Keycloak**이 처리합니다. Nginx는 로그인 버튼과 API 호출 화면의 정적 파일만 제공하며, 인증 서버나 Gateway 관리 UI가 아닙니다. 기존 OSS APISIX 컨테이너와 설정은 제거했습니다.
 
+![FinLab API7 Enterprise 현재 아키텍처](docs/images/finlab-api7-enterprise-architecture.png)
+
 ```text
 브라우저 ── 로그인(Code + PKCE) ── Keycloak ── OpenLDAP
 브라우저 ── Bearer 토큰 ── API7 Enterprise :18090
