@@ -1,0 +1,21 @@
+# API7은 이 파일에서 실행 옵션을 읽고, 실제 라우트는 Control Plane에서 받습니다.
+# 정책의 원본은 infra/gateway입니다. 이 파일에 별도 권한표를 만들지 않습니다.
+apisix:
+  node_listen: 9080
+  enable_admin: false
+  enable_control: false
+  ssl:
+    enable: false
+  status:
+    ip: 127.0.0.1
+    port: 7085
+nginx_config:
+  # 실습 DP 한 개가 라이선스의 한 코어를 사용하도록 고정합니다.
+  worker_processes: 1
+  error_log: /dev/stderr
+  error_log_level: warn
+  http:
+    access_log: /dev/stdout
+    # 쿼리 문자열, Authorization 헤더와 본문은 기록하지 않습니다.
+    access_log_format: '$remote_addr [$time_local] $request_method $uri $status $request_time $upstream_status'
+    access_log_format_escape: default
