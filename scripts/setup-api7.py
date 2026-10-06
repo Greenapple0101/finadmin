@@ -10,6 +10,8 @@ import base64
 import http.client
 import importlib.util
 import json
+import copy
+import re
 from pathlib import Path
 import socket
 import ssl
@@ -45,6 +47,8 @@ def desired():
     spec = importlib.util.spec_from_file_location('render_gateway', ROOT / 'scripts/render-gateway.py')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    policies = json.loads((ROOT / 'infra/gateway/policies.json').read_text())
+    identity = (ROOT / 'infra/gateway/enterprise-identity.lua').read_text()
     services, routes = [], []
     for source in module.configuration()['routes']:
         name = 'finlab-' + source['id']
@@ -57,6 +61,33 @@ def desired():
         plugins['response-rewrite']['headers']['set']['X-Finlab-Gateway'] = 'api7-enterprise'
         routes.append((name, {'name': name, 'service_id': name,
             'paths': source.get('uris', [source.get('uri')]), 'priority': source['priority'], 'plugins': plugins}))
+        app = source['id'].removesuffix('-api')
+        if app not in policies:
+            continue  # 로그인 전에도 화면 파일은 읽을 수 있습니다.
+        policy = policies[app]
+        plugins['serverless-post-function']['functions'] = [identity.replace(
+            '__AUDIENCE__', policy['audience']).replace('__LEGACY__', str(app == 'legacy').lower())]
+        # 넓은 /admin/* Route는 표에 없는 요청을 막는 안전망으로만 남깁니다.
+        # OIDC rewrite 이후 access 단계에서 실행되므로 토큰 없는 요청은 먼저 401입니다.
+        plugins['fault-injection'] = {'abort': {'http_status': 403,
+            'body': json.dumps({'message': 'No policy for this method and path', 'rejectedBy': 'gateway-policy'})}}
+        for rule in policy['rules']:
+            path = policy['prefix'] + rule['path']
+            route_name = 'finlab-' + app + '-' + rule['method'].lower() + '-' + re.sub(
+                '[^a-z0-9]+', '-', rule['path'].lower()).strip('-')
+            selected = copy.deepcopy(plugins)
+            selected.pop('fault-injection')
+            selected['acl'] = {
+                'external_user_label_field': '$.resource_access["' + policy['audience'] + '"].roles',
+                'external_user_label_field_key': 'roles', 'external_user_label_field_parser': 'table',
+                'allow_labels': {'roles': rule['roles']}, 'rejected_code': 403,
+                'rejected_msg': 'Required application role missing (API7 ACL)'}
+            # Native Route가 메서드와 원래 URI를 검사합니다. 인코딩/중복 슬래시 우회를 막습니다.
+            pattern = '^' + re.escape(path).replace(r'\{id\}', '[A-Za-z0-9-]+') + r'(?:\?.*)?$'
+            routes.append((route_name, {'name': route_name, 'service_id': name,
+                'paths': [path.split('{id}')[0] + '*' if '{id}' in path else path],
+                'methods': [rule['method']], 'vars': [['real_request_uri', '~~', pattern]],
+                'priority': 200, 'plugins': selected}))
     return services, routes
 
 
@@ -70,7 +101,7 @@ def main():
         raise SystemExit('FinLab 전용 그룹이 아닙니다.')
     services, routes = desired()
     if not args.apply:
-        print('적용 예정: finlab-rbac 그룹 / 서비스 4개 / 경로 4개. --apply로 적용합니다.')
+        print(f'적용 예정: finlab-rbac 그룹 / 서비스 {len(services)}개 / 경로 {len(routes)}개. --apply로 적용합니다.')
         return
     for kind, entries in [('services', services), ('routes', routes)]:
         for name, payload in entries:
@@ -79,6 +110,15 @@ def main():
                 # 관리 응답 전체에는 민감한 정보가 있을 수 있으므로 오류 설명만 제한해 표시합니다.
                 raise RuntimeError(f'{kind}/{name}: HTTP {status}: ' + str(value.get('error_msg', 'registration failed'))[:1200])
             print('적용 완료:', kind, name)
+    # 이전에 이 스크립트가 만든 Route만 정리합니다. 다른 운영자의 Route는 건드리지 않습니다.
+    manifest = PRIVATE / 'managed-routes.json'
+    current = {name for name, _ in routes}
+    previous = set(json.loads(manifest.read_text())) if manifest.exists() else set()
+    for name in sorted(previous - current):
+        status, _ = call('DELETE', '/apisix/admin/routes/' + name + '?gateway_group_id=' + group['id'])
+        if status not in (200, 204, 404):
+            raise RuntimeError(f'이전 관리 Route 정리 실패: {name}: HTTP {status}')
+    manifest.write_text(json.dumps(sorted(current)))
     if args.start:
         subprocess.run(['docker', 'compose', '-f', 'compose.api7.yaml', 'up', '-d'], cwd=ROOT, check=True)
     print('API7 Enterprise http://localhost:18091 설정 등록 완료. 실제 요청 검증은 별도로 실행하세요.')
