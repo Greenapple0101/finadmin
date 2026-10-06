@@ -28,6 +28,7 @@ nginx_config:
 # 이번 실습에서 사용하는 기능만 준비합니다.
 # 목록의 순서는 실행 순서가 아닙니다. 각 플러그인의 phase와 priority가 실행 순서를 정합니다.
 plugins:
+  - serverless-pre-function
   - openid-connect
   - proxy-rewrite
   - response-rewrite

@@ -3,7 +3,9 @@
 // API 허용 여부는 화면 버튼이 아니라 APISIX와 Spring 백엔드가 결정합니다.
 const issuer = "http://localhost:18080/realms/finlab";
 const clientId = "finlab-web";
-const redirectUri = "http://localhost:18090/";
+// 같은 화면을 OSS(18090)와 Enterprise(18091)에서 비교합니다.
+// 허용한 두 주소는 Keycloak Client에도 정확히 등록되어 있어야 합니다.
+const redirectUri = window.location.origin + "/";
 let accessToken = null;
 let expiresAt = 0;
 const session = document.querySelector("#session");
@@ -67,7 +69,12 @@ async function callApi(path, anonymous = false) {
   try {
     const response = await fetch(path, { headers, cache: "no-store" });
     const text = await response.text();
-    resultStatus.textContent = `${path} → HTTP ${response.status} · Gateway: ${response.headers.get("X-Finlab-Gateway") || "확인 불가"}`;
+    // 학습용 표식입니다. 로그의 upstream_status와 함께 보면 어느 단계에서 막혔는지 알 수 있습니다.
+    const rejected = response.headers.get("X-Finlab-Rejected-By");
+    const backend = response.headers.get("X-Finlab-Backend");
+    const stage = rejected === "gateway-policy" ? "Gateway 권한 검사에서 차단" :
+      backend ? `백엔드 응답: ${backend}` : "Gateway 응답 (백엔드 표식 없음)";
+    resultStatus.textContent = `${path} → HTTP ${response.status} · ${stage}`;
     try { result.textContent = JSON.stringify(JSON.parse(text), null, 2); }
     catch { result.textContent = text || "응답 본문 없음"; }
   } catch {

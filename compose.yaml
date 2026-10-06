@@ -111,15 +111,29 @@ services:
       - ./frontend:/usr/share/nginx/html:ro
       - ./infra/web.conf:/etc/nginx/conf.d/default.conf:ro
 
+  # JWT 검증을 추가할 수 없는 기존 앱을 흉내 냅니다. 호스트에 포트를 공개하지 않습니다.
+  legacy:
+    build: ./infra/legacy
+    networks: [legacy_private]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
   apisix:
     image: apache/apisix:3.18.0-debian
     ports: ["127.0.0.1:18090:9080"]
     volumes:
       - ./infra/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
       - ./infra/apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
-    depends_on: [keycloak, finaccess, finadmin, web]
+    # Gateway만 일반 앱 네트워크와 레거시 전용 네트워크 양쪽에 연결합니다.
+    networks: [default, legacy_private]
+    depends_on: [keycloak, finaccess, finadmin, web, legacy]
 
 volumes:
   ldap_data:
   keycloak_data:
   app_data:
+
+networks:
+  legacy_private:
+    internal: true

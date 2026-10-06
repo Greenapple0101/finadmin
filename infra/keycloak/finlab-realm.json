@@ -29,6 +29,14 @@
         {
           "name": "admin"
         }
+      ],
+      "finlegacy-api": [
+        {
+          "name": "reader"
+        },
+        {
+          "name": "admin"
+        }
       ]
     }
   },
@@ -50,6 +58,14 @@
       "directAccessGrantsEnabled": false
     },
     {
+      "clientId": "finlegacy-api",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    },
+    {
       "clientId": "finlab-web",
       "enabled": true,
       "protocol": "openid-connect",
@@ -59,14 +75,16 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/"
+        "http://localhost:18090/",
+        "http://localhost:18091/"
       ],
       "webOrigins": [
-        "http://localhost:18090"
+        "http://localhost:18090",
+        "http://localhost:18091"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/"
+        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/"
       },
       "defaultClientScopes": [
         "basic",
@@ -124,6 +142,31 @@
             "id.token.claim": "false",
             "userinfo.token.claim": "false"
           }
+        },
+        {
+          "name": "audience-finlegacy-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "finlegacy-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "finlegacy-api-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "finlegacy-api",
+            "claim.name": "resource_access.finlegacy-api.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
         }
       ]
     },
@@ -137,14 +180,16 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/"
+        "http://localhost:18090/",
+        "http://localhost:18091/"
       ],
       "webOrigins": [
-        "http://localhost:18090"
+        "http://localhost:18090",
+        "http://localhost:18091"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/"
+        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/"
       },
       "defaultClientScopes": [
         "basic",
@@ -204,14 +249,16 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/"
+        "http://localhost:18090/",
+        "http://localhost:18091/"
       ],
       "webOrigins": [
-        "http://localhost:18090"
+        "http://localhost:18090",
+        "http://localhost:18091"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/",
+        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/",
         "access.token.lifespan": "2"
       },
       "defaultClientScopes": [
@@ -270,6 +317,31 @@
             "id.token.claim": "false",
             "userinfo.token.claim": "false"
           }
+        },
+        {
+          "name": "audience-finlegacy-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "finlegacy-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "finlegacy-api-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "finlegacy-api",
+            "claim.name": "resource_access.finlegacy-api.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
         }
       ]
     },
@@ -283,14 +355,16 @@
       "implicitFlowEnabled": false,
       "serviceAccountsEnabled": false,
       "redirectUris": [
-        "http://localhost:18090/"
+        "http://localhost:18090/",
+        "http://localhost:18091/"
       ],
       "webOrigins": [
-        "http://localhost:18090"
+        "http://localhost:18090",
+        "http://localhost:18091"
       ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:18090/"
+        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/"
       },
       "defaultClientScopes": [
         "basic",
@@ -360,6 +434,94 @@
             "access.token.claim": "true",
             "id.token.claim": "false"
           }
+        },
+        {
+          "name": "audience-finlegacy-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "finlegacy-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "finlegacy-api-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "finlegacy-api",
+            "claim.name": "resource_access.finlegacy-api.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "finlab-no-roles-test",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:18090/",
+        "http://localhost:18091/"
+      ],
+      "webOrigins": [
+        "http://localhost:18090",
+        "http://localhost:18091"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:18090/##http://localhost:18091/"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email"
+      ],
+      "fullScopeAllowed": false,
+      "protocolMappers": [
+        {
+          "name": "audience-finaccess-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "finaccess-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience-finadmin-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "finadmin-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience-finlegacy-api",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "finlegacy-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
         }
       ]
     }
@@ -386,6 +548,9 @@
         ],
         "finadmin-api": [
           "user"
+        ],
+        "finlegacy-api": [
+          "reader"
         ]
       }
     },
@@ -410,6 +575,9 @@
         ],
         "finadmin-api": [
           "user"
+        ],
+        "finlegacy-api": [
+          "reader"
         ]
       }
     },
@@ -436,6 +604,9 @@
         ],
         "finadmin-api": [
           "admin"
+        ],
+        "finlegacy-api": [
+          "admin"
         ]
       }
     },
@@ -460,6 +631,9 @@
         ],
         "finadmin-api": [
           "user"
+        ],
+        "finlegacy-api": [
+          "reader"
         ]
       }
     }

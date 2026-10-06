@@ -1,0 +1,31 @@
+{
+  "finaccess": {
+    "prefix": "/access", "audience": "finaccess-api", "upstream": "finaccess:8080",
+    "rules": [
+      {"method":"GET", "path":"/api/hello", "roles":["user","approver","admin"]},
+      {"method":"GET", "path":"/api/me", "roles":["user","approver","admin"]},
+      {"method":"POST", "path":"/api/companies", "roles":["admin"]},
+      {"method":"GET", "path":"/api/companies/{id}", "roles":["user","approver","admin"]},
+      {"method":"POST", "path":"/api/companies/{id}/accounts", "roles":["admin"]},
+      {"method":"POST", "path":"/api/transfers", "roles":["user","admin"]},
+      {"method":"POST", "path":"/api/transfers/{id}/approve", "roles":["approver","admin"]},
+      {"method":"POST", "path":"/api/transfers/{id}/reject", "roles":["approver","admin"]},
+      {"method":"POST", "path":"/api/transfers/{id}/execute", "roles":["approver","admin"]}
+    ]
+  },
+  "finadmin": {
+    "prefix":"/admin", "audience":"finadmin-api", "upstream":"finadmin:8081",
+    "rules":[
+      {"method":"GET", "path":"/api/hello", "roles":["user","admin"]},
+      {"method":"GET", "path":"/api/me", "roles":["user","admin"]},
+      {"method":"GET", "path":"/api/admin/summary", "roles":["admin"]}
+    ]
+  },
+  "legacy": {
+    "prefix":"/legacy", "audience":"finlegacy-api", "upstream":"legacy:8082",
+    "rules":[
+      {"method":"GET", "path":"/api/reports", "roles":["reader","admin"]},
+      {"method":"GET", "path":"/api/admin/summary", "roles":["admin"]}
+    ]
+  }
+}
