@@ -37,9 +37,12 @@ public class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedA
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         for (Object roleValue : roles) {
-            if (roleValue instanceof String role && !role.isBlank()) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+            // 올바른 역할 옆에 숫자나 빈 값이 섞인 목록도 전체를 거절합니다.
+            // 일부만 골라 admin을 허용하지 않으므로 Gateway의 엄격한 검사와 일치합니다.
+            if (!(roleValue instanceof String role) || role.isBlank()) {
+                return List.of();
             }
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
         }
         return authorities;
     }

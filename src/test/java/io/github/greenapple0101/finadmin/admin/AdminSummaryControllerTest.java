@@ -176,10 +176,14 @@ class AdminSummaryControllerTest {
 
     @Test
     void malformedRolesDoNotGrantAdminAccessOrCauseServerError() throws Exception {
-        JWTClaimsSet.Builder malformedRoles = claims("user")
-                .claim("resource_access", Map.of("finadmin-api", Map.of("roles", "admin")));
-        mockMvc.perform(get("/api/admin/summary").header(HttpHeaders.AUTHORIZATION, bearer(malformedRoles)))
-                .andExpect(status().isForbidden());
+        for (Object roles : List.of("admin", List.of("admin", 123), List.of("admin", ""), List.of("admin", "   "))) {
+            JWTClaimsSet.Builder malformedRoles = claims("user")
+                    .claim("resource_access", Map.of("finadmin-api", Map.of("roles", roles)));
+            for (String path : List.of("/api/admin/summary", "/api/me")) {
+                mockMvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, bearer(malformedRoles)))
+                        .andExpect(status().isForbidden());
+            }
+        }
     }
 
     @Test
