@@ -4,12 +4,18 @@
 
 ## 검사 순서
 
-1. `serverless-pre-function`: 잘못된 토큰 자료형을 거절합니다. 아직 서명을 믿지 않으며, 이 검사만으로 접근을 허용하지 않습니다.
-2. `openid-connect`: Keycloak JWKS로 서명과 발급자·대상을 검증합니다.
-3. `serverless-post-function`: exp·nbf·sub를 확인하고 경로·메서드에 필요한 앱 역할을 검사합니다. 다른 앱의 admin이나 Keycloak 관리자 권한은 대신 사용할 수 없습니다.
-4. 허용된 요청만 백엔드에 전달합니다. Spring은 같은 JWT를 다시 검증하고 역할·회사·이체 규칙을 검사합니다.
+API7 Enterprise는 **기본 Route + OIDC + ACL**로 처리합니다. 사용자 정의 함수가 역할 허용 여부를 비교하지 않습니다.
 
-`infra/gateway/policies.json`이 Gateway 정책 원본입니다. `rbac.lua`는 역할 확인, `token-shape.lua`는 거절 전용 자료형 검사입니다. 두 함수는 OIDC와 함께 적용해야 합니다. 서명 없는 JWT 해석을 인증으로 사용하는 구성은 아닙니다.
+1. Route의 경로·메서드·원래 URI 조건으로 API를 선택합니다.
+2. `serverless-pre-function`은 잘못된 토큰 자료형을 거절합니다. 이 단계만으로 인증하지 않습니다.
+3. `openid-connect`는 Keycloak 공개 키로 서명·발급자·audience를 검증합니다.
+4. `enterprise-identity.lua`는 검증된 `ctx.external_user`의 시간·신원·역할 자료형을 보완 검사하고 신원 헤더를 정리합니다.
+5. 기본 `acl`의 `allow_labels.roles`가 해당 API의 허용 역할을 비교합니다.
+6. Spring은 전달받은 JWT와 역할을 독립적으로 재검증하고 업무 규칙을 적용합니다.
+
+API Route 14개, 미등록 경로·메서드를 막는 fallback 3개, 프런트 Route 1개입니다. fallback은 OIDC 검사 후 기본 `fault-injection.abort`로 403을 반환하며 upstream에 전달하지 않습니다.
+
+정책 원본은 `infra/gateway/policies.json` 하나입니다. `scripts/setup-api7.py`가 실제 제품 설정으로 변환합니다. 이전 OSS APISIX 18090은 비교용 `rbac.lua`를 유지합니다. [실제 콘솔 강의자료](16-api7-console-walkthrough.md)와 [기본 ACL 전환 설명](17-api7-native-authorization.md)을 함께 보세요.
 
 ## API별 정책
 

@@ -27,7 +27,7 @@ Enabled는 설정이 활성화됐다는 표시입니다. 실제 요청 성공 �
 
 ## 3. Route에서 인증 설정 찾기
 
-`finlab-finadmin-api`를 열고 Routes의 `/admin, /admin/*`를 선택합니다. Route 상세 아래 Plugins에서 `openid-connect`의 **View**를 누릅니다. 왼쪽 별도 Plugins 메뉴는 Service 범위이므로 혼동하지 마세요. 이번 인증·인가 설정은 Route 범위입니다.
+`finlab-finadmin-api`를 열고 Routes의 `GET /admin/api/admin/summary`를 선택합니다. Route 상세 아래 Plugins에서 `openid-connect`의 **View**를 누릅니다. 왼쪽 별도 Plugins 메뉴는 Service 범위이므로 혼동하지 마세요. 이번 인증·인가 설정은 Route 범위입니다.
 
 ![실제 OIDC 플러그인 조회 화면](images/api7/console-oidc.jpg)
 
@@ -45,17 +45,17 @@ FinAdmin Route의 대상은 `finadmin-api`입니다. 이 대상 검사를 통과
 
 ## 4. Route에서 역할 검사 찾기
 
-Close로 돌아와 `serverless-post-function`의 View를 누릅니다.
+Close로 돌아와 기본 **acl** 플러그인의 View를 누릅니다.
 
-![실제 역할 검사 플러그인 조회 화면](images/api7/console-rbac.jpg)
+![실제 기본 ACL 설정](images/api7/console-native-acl.jpg)
 
-이 플러그인은 Lua 함수를 실행하는 제품 기능입니다. 이번에는 그 안에 경로·HTTP 메서드별 역할 검사 함수를 등록했습니다. 제품의 전용 클릭형 역할 편집기를 사용한 것은 아닙니다. JSON의 긴 함수 문자열은 읽기 어려우므로, 설명과 수정은 주석이 있는 `infra/gateway/rbac.lua` 및 `policies.json`을 함께 봅니다.
+`allow_labels.roles`의 `admin`이 이 API에 필요한 역할입니다. `external_user_label_field`는 검증된 사용자 정보에서 `resource_access.finadmin-api.roles`를 읽으라는 설정입니다. 다른 앱의 admin이나 Keycloak 관리 권한은 대신 사용하지 않습니다.
 
-예를 들어 `GET /admin/api/admin/summary`라면 `resource_access.finadmin-api.roles`에 `admin`이 있어야 합니다. `user`만 있거나 역할이 없으면 Gateway에서 403으로 끝납니다. 다른 앱의 admin 역할은 대신 사용할 수 없습니다.
+이전에는 Lua 함수 안에서 경로와 허용 역할을 비교했습니다. 현재는 제품의 Route가 경로·메서드를 선택하고 기본 ACL이 허용 역할을 비교합니다. JSON 설정이 실제 콘솔에 표시되며, 별도 화면을 만든 것이 아닙니다.
 
-실행 순서는 자료형 사전 검사 → OIDC 서명·발급자·대상 검사 → 시간·경로·메서드·역할 검사입니다. `serverless-post-function`의 phase는 rewrite이며, 플러그인 우선순위에 따라 OIDC 이후 실행됩니다. 이름의 post가 백엔드 응답 이후라는 뜻은 아닙니다. 이 Lua 함수의 JWT 해석만으로 서명을 검증할 수 없으므로 OIDC와 반드시 함께 적용합니다.
+`serverless-post-function`은 현재 `enterprise-identity.lua`를 실행합니다. OIDC가 검증한 정보를 받아 엄격한 시간·역할 자료형 검사와 헤더 정리만 보완합니다. 여기에는 허용 역할 목록을 순회하는 코드가 없습니다. 이름의 post는 백엔드 응답 이후라는 뜻이 아니며 rewrite 단계의 끝에서 실행합니다.
 
-Route 화면의 Methods에 여러 메서드가 표시되는 것은 Route 매칭 범위입니다. 실제 허용 메서드와 경로는 함수의 정책표에서 더 좁게 제한합니다. 예를 들어 관리자 요약의 POST는 표에 없으므로 거절합니다.
+Route 화면의 Methods는 이 API에서 GET만 표시합니다. 잘못된 메서드나 등록하지 않은 경로는 넓은 `/admin, /admin/*` fallback에 걸려 403으로 끝납니다. fallback의 `fault-injection`은 의도적으로 거절 응답을 반환하는 용도로 사용했습니다.
 
 ## 5. 통과한 뒤에는 어디로 갈까요?
 
@@ -73,7 +73,7 @@ Spring에는 원래 Bearer JWT가 전달됩니다. Spring도 서명·발급자·
 4. [검증 기록](verification/api7-2026-10-06.json)에서 직접 Spring 호출도 역할을 검사하는 사례를 보여 줍니다.
 5. LDAP 그룹 제거 후 기존 토큰은 200, 새 토큰은 403이었던 기록을 비교합니다. 이번 검증 종료 시 그룹은 복원했습니다.
 
-실제 Enterprise 통합 검사 125개가 통과했습니다. 화면에 플러그인이 보이는 사실과 실제 요청이 차단되는 사실을 구분해 설명하세요. [구현 보고서](15-api7-enterprise-integration.md)에 이번 검사 범위와 추가 과제를 적었습니다.
+최종 기본 ACL 설정에서 배포 확인을 포함한 통합 검사 156개가 통과했습니다. 화면에 플러그인이 보이는 사실과 실제 요청이 차단되는 사실을 구분해 설명하세요. [구현 보고서](15-api7-enterprise-integration.md)에 이번 검사 범위와 추가 과제를 적었습니다.
 
 ## 자주 헷갈리는 부분
 

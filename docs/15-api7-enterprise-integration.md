@@ -38,18 +38,20 @@ flowchart LR
 
 Gateway Group `finlab-rbac`, 전용 컨테이너 `finlab-api7-gateway`, loopback 18091, Nginx worker 1개입니다. 기존 API7의 default 그룹과 Gateway는 변경하지 않았습니다.
 
-| Service와 Route 이름 | 경로 | 내부 대상 |
+| Service와 fallback Route 이름 | 보호하는 경로 | 내부 대상 |
 |---|---|---|
 | finlab-finaccess-api | /access 및 /access/* | finaccess:8080 |
 | finlab-finadmin-api | /admin 및 /admin/* | finadmin:8081 |
 | finlab-legacy-api | /legacy 및 /legacy/* | legacy:8082 |
 | finlab-frontend | /*, 낮은 우선순위 | web:80 |
 
+현재 각 API 경로·메서드마다 기본 ACL을 설정한 Route를 별도로 등록했습니다. 총 18개 Route(허용 14, fallback 3, 프런트 1)입니다. 아래 기본 ACL 전환 이후의 기록을 기준으로 시연하세요.
+
 역할은 `resource_access.<해당 API>.roles`에서만 읽습니다. [전체 API 정책표](14-gateway-rbac-policy.md)를 참고하세요. API7 운영자가 설정을 편집하는 관리 권한과, 사용자가 API를 호출하는 업무 역할은 서로 다른 RBAC입니다.
 
 ## 이번에 실행한 검증
 
-실제 API7 Enterprise 경유 통합 검사 **125개 통과**, 실패 0개입니다. [상세 결과 JSON](verification/api7-2026-10-06.json)에 실행 시각·예상값·실제값·검사 위치·설정 해시를 보관했습니다. 비밀번호·토큰 원문은 포함하지 않습니다.
+최종 기본 ACL 설정에서 실제 Enterprise 경유 **156개 검사 통과**, 실패 0개입니다. [최종 통합 검사](verification/api7-native-acl-2026-10-06.json)에는 배포한 18개 Route 조회와 위조 헤더·ACL 로그 검사를 포함합니다. 앞서 별도 실행한 [23개 추가 검사](verification/api7-native-acl-focused-2026-10-06.json)와 이전 Lua RBAC의 [125개 기록](verification/api7-2026-10-06.json)은 과거 결과로 보존하며 최종 156개에 중복 합산하지 않습니다. 모든 기록에서 비밀번호·토큰 원문은 제외했습니다.
 
 | 사례 | 확인한 결과 |
 |---|---|
@@ -85,7 +87,7 @@ setup은 FinLab 전용 그룹의 서비스·라우트만 갱신합니다. `.loca
 ## 5분 시연
 
 1. 실제 API7 콘솔에서 `finlab-rbac` 그룹과 위 서비스 네 개를 확인합니다.
-2. API Route의 openid-connect와 serverless 함수 설정을 확인합니다. 전용 클릭형 역할 편집기를 만든 것은 아니며 플러그인 설정에 정책을 등록했습니다.
+2. 개별 API Route의 openid-connect와 acl 설정을 확인합니다. allow_labels.roles에 허용 역할이 보이며 기본 제품 플러그인이 역할을 비교합니다.
 3. 18091 사용자 앱에서 alice로 로그인하고 관리자 요약 403, 레거시 보고서 200을 확인합니다.
 4. admin으로 로그인하여 관리자 요약과 레거시 관리자 요약 200을 확인합니다.
 5. 검사 JSON의 직접 Spring 403·레거시 네트워크 격리·LDAP 토큰 변화 결과를 설명합니다.

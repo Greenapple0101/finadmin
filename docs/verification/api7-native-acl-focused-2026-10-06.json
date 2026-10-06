@@ -1,0 +1,126 @@
+{
+  "verifiedAt": "2026-10-06T05:53:35.402202+00:00",
+  "kind": "Additional native ACL deployment and HTTP/log checks",
+  "checks": [
+    {
+      "case": "deployed native policy: finlab-finaccess-api",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-get-api-hello",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-get-api-me",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-companies",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-get-api-companies-id",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-companies-id-accounts",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-transfers",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-transfers-id-approve",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-transfers-id-reject",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finaccess-post-api-transfers-id-execute",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finadmin-api",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finadmin-get-api-hello",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finadmin-get-api-me",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-finadmin-get-api-admin-summary",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-legacy-api",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-legacy-get-api-reports",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-legacy-get-api-admin-summary",
+      "passed": true
+    },
+    {
+      "case": "deployed native policy: finlab-frontend",
+      "passed": true
+    },
+    {
+      "case": "native route: query string does not change permission",
+      "passed": true,
+      "expected": 200,
+      "actual": 200,
+      "expectedLayer": "finadmin",
+      "backend": "finadmin",
+      "rejectedBy": null,
+      "nativeAclDenied": false,
+      "method": "GET",
+      "path": "/admin/api/me"
+    },
+    {
+      "case": "native ACL: external userinfo and access-token headers cannot grant admin",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "GET",
+      "path": "/admin/api/admin/summary"
+    },
+    {
+      "case": "native ACL: role denial came from the built-in ACL",
+      "passed": true
+    },
+    {
+      "case": "native ACL: unique forbidden account request",
+      "passed": true,
+      "expected": 403,
+      "actual": 403,
+      "expectedLayer": "gateway-policy",
+      "backend": null,
+      "rejectedBy": null,
+      "nativeAclDenied": true,
+      "method": "POST",
+      "path": "/access/api/companies/7733123a-bfac-4844-8071-ad88aef460ee/accounts"
+    },
+    {
+      "case": "native ACL: denied request never reached upstream",
+      "passed": true,
+      "path": "/api/companies/7733123a-bfac-4844-8071-ad88aef460ee/accounts",
+      "upstreamStatus": "-"
+    }
+  ],
+  "total": 23,
+  "passed": true
+}

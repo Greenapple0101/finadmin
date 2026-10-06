@@ -1,6 +1,6 @@
-# FinAdmin · Keycloak과 APISIX 인증·인가 실습
+# FinAdmin · Keycloak과 API7 Enterprise 인증·인가 실습
 
-현재 주 시연 환경은 **API7 Enterprise**입니다. [연동·검증 보고서](docs/15-api7-enterprise-integration.md)와 [API 역할 정책표](docs/14-gateway-rbac-policy.md)를 먼저 보세요. 관리 UI는 `https://localhost:7443`, 사용자 앱은 `http://localhost:18091`입니다.
+현재 주 시연 환경은 **API7 Enterprise의 기본 OIDC·ACL·Route 기반 인증·인가**입니다. [기본 기능으로 권한 검사를 옮긴 내용](docs/17-api7-native-authorization.md)을 참고하세요. [연동·검증 보고서](docs/15-api7-enterprise-integration.md)와 [API 역할 정책표](docs/14-gateway-rbac-policy.md)를 먼저 보세요. 관리 UI는 `https://localhost:7443`, 사용자 앱은 `http://localhost:18091`입니다.
 
 [FinAccess](https://github.com/Greenapple0101/finaccess)와 별도로 실행하는 Spring Boot 관리자 API입니다. 이 저장소에는 두 백엔드를 함께 실습하기 위한 **OpenLDAP, Keycloak, Apache APISIX, 로그인 화면, 실행·검증 스크립트**도 있습니다.
 
