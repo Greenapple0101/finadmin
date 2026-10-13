@@ -95,9 +95,31 @@ services:
       app-db:
         condition: service_healthy
 
+  # ITSM 데이터는 FinAccess·Keycloak DB와 별도로 보관합니다.
+  # 호스트에 DB 포트를 공개하지 않고 FinAdmin에서만 연결합니다.
+  itsm-db:
+    image: postgres:17.11-bookworm
+    environment:
+      POSTGRES_DB: finadmin
+      POSTGRES_USER: finadmin
+      POSTGRES_PASSWORD: ${ITSM_DB_PASSWORD:?Run scripts/init-local.py first}
+    volumes:
+      - itsm_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U finadmin -d finadmin"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
   finadmin:
     build: .
+    depends_on:
+      itsm-db:
+        condition: service_healthy
     environment:
+      ITSM_DB_URL: jdbc:postgresql://itsm-db:5432/finadmin
+      ITSM_DB_USERNAME: finadmin
+      ITSM_DB_PASSWORD: ${ITSM_DB_PASSWORD}
       JWT_ISSUER_URI: http://localhost:18080/realms/finlab
       JWT_JWK_SET_URI: http://keycloak:8080/realms/finlab/protocol/openid-connect/certs
       JWT_AUDIENCE: finadmin-api
@@ -116,3 +138,4 @@ volumes:
   ldap_data:
   keycloak_data:
   app_data:
+  itsm_data:

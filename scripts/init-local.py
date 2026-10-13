@@ -8,7 +8,7 @@ import string
 ROOT = Path(__file__).resolve().parents[1]
 ENV = ROOT / '.env'
 DESKTOP = Path.home() / 'Desktop' / 'finadmin-local-secrets.md'
-KEYS = ('KEYCLOAK_DB_PASSWORD', 'KEYCLOAK_ADMIN_PASSWORD', 'APP_DB_PASSWORD',
+KEYS = ('KEYCLOAK_DB_PASSWORD', 'KEYCLOAK_ADMIN_PASSWORD', 'APP_DB_PASSWORD', 'ITSM_DB_PASSWORD',
         'LAB_ALICE_PASSWORD', 'LAB_BOB_PASSWORD', 'LAB_ADMIN_PASSWORD', 'LAB_OUTSIDER_PASSWORD',
         'LDAP_ADMIN_PASSWORD', 'LDAP_BIND_PASSWORD', 'LDAP_ALICE_PASSWORD',
         'LDAP_BOB_PASSWORD', 'LDAP_ADMIN_USER_PASSWORD', 'LDAP_OUTSIDER_PASSWORD')
@@ -47,7 +47,7 @@ def main():
              '- API Client: `finaccess-api`, `finadmin-api`', '',
              '| 항목 | 비밀번호 |', '| --- | --- |']
     labels = {'KEYCLOAK_ADMIN_PASSWORD': 'bootstrap-admin (Keycloak 관리)',
-              'KEYCLOAK_DB_PASSWORD': 'Keycloak DB', 'APP_DB_PASSWORD': 'FinAccess 실습 DB',
+              'KEYCLOAK_DB_PASSWORD': 'Keycloak DB', 'APP_DB_PASSWORD': 'FinAccess 실습 DB', 'ITSM_DB_PASSWORD': 'FinAdmin ITSM DB',
               'LAB_ALICE_PASSWORD': 'alice (A회사 담당자)', 'LAB_BOB_PASSWORD': 'bob (A회사 결재자)',
               'LAB_ADMIN_PASSWORD': 'admin (A회사 / 앱 관리자)',
               'LAB_OUTSIDER_PASSWORD': 'outsider (B회사 담당자)',

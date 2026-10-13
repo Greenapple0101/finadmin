@@ -37,8 +37,17 @@ dependencies {
     // 로그인 화면이나 비밀번호 저장소를 만드는 것이 아닙니다. 로그인은 Keycloak이 맡습니다.
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 
+    // ITSM 요청과 회사 소속을 FinAdmin 전용 DB에 보관합니다. FinAccess DB는 읽지 않습니다.
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
+
     // 아래 도구들은 테스트에서만 씁니다. MockMvc로 요청과 응답을 검사할 수 있습니다.
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.testcontainers:testcontainers-postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

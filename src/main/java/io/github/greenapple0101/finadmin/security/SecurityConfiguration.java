@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.JwtClaimValidator;
@@ -26,6 +27,7 @@ import java.time.Instant;
 
 // @Configuration은 'Spring이 사용할 설정을 모아 둔 클래스'라는 표시입니다.
 @Configuration
+@EnableWebSecurity // 웹 계층만 준비하는 테스트에서도 같은 보안 검사 흐름을 연결합니다.
 public class SecurityConfiguration {
 
     // @Bean은 반환한 객체를 Spring이 보관하고 필요한 곳에 연결하도록 합니다.
@@ -51,11 +53,18 @@ public class SecurityConfiguration {
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/hello").permitAll()
                         // 이 앱의 역할이 없는 토큰은 로그인 자체가 유효해도 내 정보 API를 사용할 수 없습니다.
-                        // 관리자는 user 역할이 없어도 접근할 수 있게 '둘 중 하나'를 확인합니다.
-                        .requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("user", "admin")
+                        // 승인자와 관리자는 user 역할이 없어도 자기 신원을 조회할 수 있습니다.
+                        .requestMatchers(HttpMethod.GET, "/api/me").hasAnyRole("user", "approver", "admin")
                         // hasRole("admin")은 ROLE_admin이라는 권한이 있는지 확인합니다.
                         // 주소뿐 아니라 HTTP 메서드도 정합니다. 같은 주소의 POST까지 열지는 않습니다.
                         .requestMatchers(HttpMethod.GET, "/api/admin/summary").hasRole("admin")
+                        // ITSM의 작업 권한입니다. 회사 소속·자기 승인 금지는 Service가 추가로 검사합니다.
+                        .requestMatchers(HttpMethod.GET, "/api/itsm/me", "/api/itsm/requests", "/api/itsm/requests/*")
+                        .hasAnyRole("user", "approver", "admin")
+                        .requestMatchers(HttpMethod.POST, "/api/itsm/requests").hasAnyRole("user", "approver", "admin")
+                        .requestMatchers(HttpMethod.POST, "/api/itsm/requests/*/approve").hasAnyRole("approver", "admin")
+                        .requestMatchers(HttpMethod.POST, "/api/itsm/requests/*/complete").hasRole("admin")
+                        .requestMatchers(HttpMethod.GET, "/api/itsm/summary").hasRole("admin")
                         // 새 API는 여기와 Gateway에 허용 규칙을 추가해야 사용할 수 있습니다.
                         .anyRequest().denyAll())
                 // oauth2ResourceServer는 토큰을 발급하는 기능이 아니라 받은 토큰을 검사하는 기능입니다.

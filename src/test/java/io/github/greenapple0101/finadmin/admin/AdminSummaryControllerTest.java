@@ -21,7 +21,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import io.github.greenapple0101.finadmin.security.SecurityConfiguration;
+import io.github.greenapple0101.finadmin.security.CurrentUserController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -44,9 +48,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// 전체 앱의 설정을 준비합니다. MockMvc는 실제 API 포트를 열지 않고 HTTP 처리 흐름을 실행합니다.
-@SpringBootTest
-@AutoConfigureMockMvc
+// 웹 계층과 실제 보안 설정을 준비합니다. DB 업무 흐름은 ServiceRequestApiTest에서 확인합니다.
+@WebMvcTest({AdminSummaryController.class, CurrentUserController.class, AdminSummaryControllerTest.ItsmPolicyProbe.class})
+@Import({SecurityConfiguration.class, AdminSummaryControllerTest.ItsmPolicyProbe.class})
 class AdminSummaryControllerTest {
 
     private static final String ISSUER = "http://localhost:18080/realms/finlab";
@@ -239,7 +243,7 @@ class AdminSummaryControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"user", "admin"})
+    @ValueSource(strings = {"user", "approver", "admin"})
     void eitherApplicationRoleCanReadOwnIdentity(String role) throws Exception {
         // 관리자는 user 역할이 없어도 내 정보를 읽을 수 있습니다.
         mockMvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, bearer(claims(role))))
@@ -249,7 +253,7 @@ class AdminSummaryControllerTest {
     @Test
     void allProtectedReadsRejectMissingUnknownOrMalformedApplicationRoles() throws Exception {
         Object[] invalidClaims = {null, Map.of(), Map.of("finadmin-api", Map.of("roles", List.of())),
-                Map.of("finadmin-api", Map.of("roles", List.of("approver"))),
+                Map.of("finadmin-api", Map.of("roles", List.of("unknown-role"))),
                 Map.of("finadmin-api", Map.of("roles", "admin")),
                 Map.of("finadmin-api", Map.of("roles", List.of(123))),
                 Map.of("finaccess-api", Map.of("roles", List.of("admin")))};
@@ -329,5 +333,21 @@ class AdminSummaryControllerTest {
         } catch (Exception exception) {
             throw new IllegalStateException("테스트용 공개 키 서버를 시작하지 못했습니다", exception);
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"user,approve,403", "approver,approve,200", "admin,approve,200",
+                "user,complete,403", "approver,complete,403", "admin,complete,200"})
+    void signedTokenMustHaveItsmActionRole(String role, String action, int expected) throws Exception {
+        mockMvc.perform(request(HttpMethod.POST, "/api/itsm/requests/demo/" + action)
+                .header(HttpHeaders.AUTHORIZATION, bearer(claims(role))))
+                .andExpect(status().is(expected));
+    }
+
+    // 실제 서명 토큰으로 URL 권한만 검사하는 도우미입니다. 실제 업무 서비스는 별도 DB 시험으로 확인합니다.
+    @RestController
+    static class ItsmPolicyProbe {
+        @PostMapping({"/api/itsm/requests/demo/approve", "/api/itsm/requests/demo/complete"})
+        Map<String, String> accepted() { return Map.of("result", "accepted"); }
     }
 }
