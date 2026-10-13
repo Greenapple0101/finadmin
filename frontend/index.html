@@ -3,35 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FinLab · API7 Enterprise 인증·인가</title>
+  <title>FinLab · IT 서비스 요청</title>
   <link rel="stylesheet" href="/style.css">
   <script src="/app.js" defer></script>
+  <script src="/itsm.js" defer></script>
 </head>
 <body>
 <main>
-  <p class="eyebrow">FINACCESS + FINADMIN</p>
-  <h1>같은 로그인, 서로 다른 API 권한</h1>
-  <p>Keycloak에서 로그인한 뒤 API7 Enterprise가 토큰과 역할을 확인합니다. FinAccess와 FinAdmin도 각자 토큰과 역할을 다시 검사합니다.</p>
+  <p class="eyebrow">FINLAB · FINACCESS + FINADMIN ITSM</p>
+  <h1>IT 서비스 요청부터 처리 완료까지</h1>
+  <p>필요한 IT 서비스를 요청하고 진행 상황을 확인하세요. 승인자와 처리 담당자는 소속 회사의 요청을 처리합니다.</p>
   <section aria-labelledby="login-heading">
-    <h2 id="login-heading">1. 사용자 로그인</h2>
-    <p><code>alice</code>는 일반 사용자, <code>admin</code>은 앱 관리자입니다. 비밀번호는 데스크탑의 로컬 인증 문서에 있습니다.</p>
+    <h2 id="login-heading">사용자 로그인</h2>
+    <p><code>alice</code>는 요청 직원, <code>bob</code>은 승인자, <code>admin</code>은 처리 담당자입니다. 비밀번호는 데스크탑의 로컬 인증 문서에 있습니다.</p>
     <p>회사 명부 계정으로도 비교해 보세요. <code>ldap-alice</code>는 일반 직원, <code>ldap-admin</code>은 관리자입니다. 같은 로그인 버튼을 사용합니다.</p>
     <div class="buttons"><button id="login">Keycloak에서 로그인</button><button id="logout" class="secondary">로그아웃</button></div>
     <p id="session" role="status">로그인하지 않았습니다.</p>
   </section>
-  <section aria-labelledby="api-heading">
-    <h2 id="api-heading">2. 권한에 따른 응답 확인</h2>
-    <p>일반 사용자도 내 정보는 조회할 수 있습니다. 관리자 요약은 <code>admin</code> 역할이 있어야 조회됩니다.</p>
+  <section aria-labelledby="itsm-heading">
+    <div class="section-heading"><div><p class="eyebrow">FINADMIN · SERVICE REQUEST</p><h2 id="itsm-heading">내 IT 서비스 요청</h2></div><button id="itsm-refresh" class="secondary" disabled>새로 조회</button></div>
+    <p id="itsm-profile">로그인하면 소속 회사와 처리할 수 있는 업무를 확인할 수 있습니다.</p>
+    <p id="itsm-message" role="status" aria-live="polite"></p>
+    <div id="itsm-workspace" hidden>
+      <div id="itsm-summary" class="summary-cards" hidden></div>
+      <form id="itsm-create">
+        <h3>새 서비스 요청</h3>
+        <label for="service-name">이용할 서비스</label>
+        <input id="service-name" name="serviceName" maxlength="100" placeholder="예: 개발용 테스트 환경" required>
+        <label for="service-reason">이용 목적과 필요한 내용</label>
+        <textarea id="service-reason" name="reason" rows="3" maxlength="1000" placeholder="어떤 업무에 필요한지 알려주세요." required></textarea>
+        <button type="submit">요청 등록</button>
+      </form>
+      <div class="section-heading"><h3 id="itsm-list-heading">내 요청 목록</h3><span id="itsm-page-label"></span></div>
+      <p class="hint">접수됨 → 승인됨 → 처리 완료 순서로 진행됩니다. 본인의 요청은 직접 승인할 수 없습니다.</p>
+      <div id="itsm-list" aria-live="polite"></div>
+      <div class="buttons pagination"><button id="itsm-prev" class="secondary" disabled>이전</button><button id="itsm-next" class="secondary" disabled>다음</button></div>
+      <div id="itsm-detail" class="request-detail" hidden></div>
+      <form id="itsm-complete" hidden>
+        <h3>처리 결과 기록</h3>
+        <label for="completion-note">수행한 작업과 이용 안내</label>
+        <textarea id="completion-note" rows="3" maxlength="1000" required></textarea>
+        <p class="hint">이 실습은 처리 결과를 기록합니다. 계정이나 서버가 자동으로 발급되지는 않습니다.</p>
+        <button type="submit">처리 완료로 기록</button>
+      </form>
+    </div>
+  </section>
+  <details class="diagnostics">
+    <summary>금융 앱 연결과 인증·권한 검사 확인</summary>
+    <section aria-labelledby="api-heading">
+    <h2 id="api-heading">두 독립 백엔드의 권한 확인</h2>
+    <p>일반 사용자도 내 정보는 조회할 수 있습니다. 기존 샘플 요약은 <code>admin</code> 역할이 있어야 조회됩니다. 위 ITSM 현황은 실제 요청을 집계합니다.</p>
     <div class="buttons">
       <button data-path="/access/api/me">FinAccess 내 정보</button>
       <button data-path="/admin/api/me">FinAdmin 내 정보</button>
-      <button data-path="/admin/api/admin/summary">관리자 요약</button>
+      <button data-path="/admin/api/admin/summary">기존 관리자 샘플</button>
       <button id="anonymous" class="secondary">토큰 없이 관리자 요약 요청</button>
     </div>
     <p id="result-status" role="status">버튼을 눌러 요청 결과를 확인하세요.</p>
     <pre id="result" aria-label="API 응답">아직 요청하지 않았습니다.</pre>
   </section>
-  <aside>401: 유효한 토큰이 필요합니다. · 403: 요청에 필요한 권한이 없습니다. · 200: 조회 성공.<br>요약의 숫자는 샘플입니다. 실제 고객정보나 금융 거래를 사용하지 않습니다.</aside>
+  </details>
+  <aside>401: 유효한 토큰이 필요합니다. · 403: 요청에 필요한 권한이 없습니다. · 200: 조회 성공.<br>ITSM에는 실습용 요청만 등록하세요. 진단 영역의 기존 관리자 요약은 고정 샘플입니다.</aside>
 </main>
 </body>
 </html>

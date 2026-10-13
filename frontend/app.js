@@ -51,7 +51,8 @@ async function finishLogin() {
   const tokens = await response.json();
   accessToken = tokens.access_token;
   expiresAt = Date.now() + tokens.expires_in * 1000;
-  session.textContent = "로그인했습니다. 내 정보 버튼으로 백엔드가 확인한 사용자와 역할을 볼 수 있습니다.";
+  session.textContent = "로그인했습니다. IT 서비스 요청을 이용할 수 있습니다.";
+  document.dispatchEvent(new Event("finlab-login"));
 }
 
 async function callApi(path, anonymous = false) {
@@ -97,3 +98,25 @@ document.querySelectorAll("[data-path]").forEach(button => {
 });
 document.querySelector("#anonymous").addEventListener("click", () => callApi("/admin/api/admin/summary", true));
 finishLogin().catch(error => { session.textContent = error.message; });
+
+// ITSM 화면도 같은 메모리의 Access Token으로 실제 API를 호출합니다.
+// 화면은 버튼을 안내할 뿐이고, 최종 역할·회사 검사는 API7과 Spring이 수행합니다.
+async function itsmApi(path, method = "GET", body = undefined) {
+  if (!accessToken || Date.now() >= expiresAt) {
+    accessToken = null;
+    document.dispatchEvent(new Event("finlab-expired"));
+    throw new Error("로그인이 필요하거나 만료되었습니다. Keycloak에서 다시 로그인하세요.");
+  }
+  const response = await fetch("/admin/api/itsm" + path, {
+    method, cache: "no-store",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (response.status === 401) {
+    accessToken = null;
+    document.dispatchEvent(new Event("finlab-expired"));
+  }
+  if (!response.ok) throw new Error(data.detail || data.message || `요청 실패 (HTTP ${response.status})`);
+  return data;
+}
