@@ -2,6 +2,8 @@
 
 2026-10-06, API7 Enterprise 3.10.2에 적용하고 실제 요청을 확인한 기록입니다.
 
+**2026-10-13 변경:** ITSM API 7개가 추가되어 현재 Service 3개, Route 22개(허용 API 19 + fallback 2 + 프런트 1)입니다. 아래 15개 Route·135개 검사는 10월 6일의 기록입니다. [현재 정책](14-gateway-rbac-policy.md), [ITSM 구현과 새 검증](18-itsm-service-requests.md)을 참고하세요.
+
 ## 무엇을 바꿨나요?
 
 기존에는 API7의 Lua 함수 안에서 경로·HTTP 메서드와 허용 역할을 비교했습니다. 현재는 **Route가 요청을 선택하고, OIDC가 토큰을 검증하고, 기본 ACL이 역할을 판단**합니다. 같은 정책 원본으로 설정을 만들며 별도 인가 서비스나 Spring 코드는 추가하지 않았습니다.
@@ -16,7 +18,7 @@
 | 비정상 JWT·시간·역할 자료형 | 짧은 보조 함수로 엄격히 거절 |
 | 요청 전달 | proxy-rewrite와 Service의 Upstream |
 
-등록 수는 Service 3개, Route 15개입니다. 허용 API Route 12개에 각각 ACL이 있으며 fallback 2개와 정적 프런트 1개에는 허용 ACL을 붙이지 않습니다. fallback은 인증 이후 무조건 거절합니다.
+10월 6일 당시 등록 수는 Service 3개, Route 15개입니다. 허용 API Route 12개에 각각 ACL이 있으며 fallback 2개와 정적 프런트 1개에는 허용 ACL을 붙이지 않습니다. fallback은 인증 이후 무조건 거절합니다.
 
 ## 실제 화면에서 읽는 예
 
@@ -49,7 +51,7 @@ Gateway Groups → finlab-rbac → Services → finlab-finadmin-api → Routes �
 
 ## 검증 결과
 
-[현재 두 백엔드 구성의 135개 검사](verification/api7-two-backends-2026-10-06.json)가 모두 통과했습니다.
+[10월 6일 두 백엔드 구성의 135개 검사](verification/api7-two-backends-2026-10-06.json)가 모두 통과했습니다.
 
 - 토큰 없음·변조·만료·미래 nbf·대상 불일치, 경로/역할/메서드, 원래 URI 우회.
 - 직접 Spring 재검증, 다른 회사 접근, LDAP 그룹 변경과 복원.

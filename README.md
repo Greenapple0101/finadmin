@@ -1,20 +1,22 @@
-# FinAdmin · Keycloak과 API7 Enterprise 인증·인가 실습
+# FinAdmin · IT 서비스 요청·승인·처리 앱
 
 현재 유일한 FinLab Gateway는 **API7 Enterprise의 기본 OIDC·ACL·Route 기반 인증·인가**입니다. [기본 기능으로 권한 검사를 옮긴 내용](docs/17-api7-native-authorization.md)을 참고하세요. [연동·검증 보고서](docs/15-api7-enterprise-integration.md)와 [API 역할 정책표](docs/14-gateway-rbac-policy.md)를 먼저 보세요. 관리 UI는 `https://localhost:7443`, 사용자 앱은 `http://localhost:18090`입니다.
 
-[FinAccess](https://github.com/Greenapple0101/finaccess)와 별도로 실행하는 Spring Boot 관리자 API입니다. 이 저장소에는 두 백엔드를 함께 실습하기 위한 **OpenLDAP, Keycloak, API7 Enterprise 설정, 로그인 화면, 실행·검증 스크립트**도 있습니다.
+[FinAccess](https://github.com/Greenapple0101/finaccess) 금융 앱과 별도로 실행하는 **ITSM 서비스 요청 앱**입니다. 직원이 IT 서비스를 요청하면 다른 승인자가 승인하고, 처리 담당자가 작업 결과를 기록합니다. 전체 시스템의 RBAC를 총괄하는 서버가 아닙니다.
+
+처음에는 [ITSM 구현·학습·화면 시연 가이드](docs/18-itsm-service-requests.md)를 읽으세요. 이 저장소에는 두 백엔드를 함께 실습하기 위한 **OpenLDAP, Keycloak, API7 Enterprise 설정, 로그인 화면, 실행·검증 스크립트**도 있습니다.
 
 Keycloak에서 발급받은 액세스 토큰을 API7 Enterprise가 검사하고 전달합니다. FinAccess와 FinAdmin도 각각 토큰을 다시 검증하고, 자기 앱의 역할과 업무 규칙에 따라 응답합니다.
 
 사용자 로그인은 **Keycloak**이 처리합니다. Nginx는 로그인 버튼과 API 호출 화면의 정적 파일만 제공하며, 인증 서버나 Gateway 관리 UI가 아닙니다. 기존 OSS APISIX 컨테이너와 설정은 제거했습니다.
 
-![FinLab API7 Enterprise 현재 아키텍처](docs/images/finlab-api7-enterprise-architecture.png)
+**2026-10-13 구성:** FinAccess 금융 앱 + FinAdmin ITSM 앱, 독립 백엔드 두 개와 각각의 업무 DB.
 
 ```text
 브라우저 ── 로그인(Code + PKCE) ── Keycloak ── OpenLDAP
 브라우저 ── Bearer 토큰 ── API7 Enterprise :18090
                             ├── FinAccess: JWT + 역할 + 회사·이체 규칙
-                            ├── FinAdmin: JWT + 관리자 역할
+                            ├── FinAdmin: JWT + 역할 + 회사·서비스 요청 규칙 → ITSM DB
                             └── Nginx: 사용자 화면 파일
 API7 실제 관리 UI: https://localhost:7443
 ```
@@ -29,18 +31,22 @@ API7 실제 관리 UI: https://localhost:7443
 - 프런트의 Authorization Code + PKCE 로그인과 Bearer API 호출
 - API7 Enterprise의 OIDC 검증·기본 ACL 역할 검사·경로/메서드 제한·Authorization 헤더 전달
 - 두 Spring Resource Server의 독립적인 JWT 서명·발급자·시간·대상 검증
-- FinAdmin의 Client 역할에 따른 관리자 API 제한
+- FinAdmin의 서비스 요청·승인·완료, 회사·본인 요청 범위 제한, 자기 승인 금지
+- ITSM 전용 PostgreSQL과 Flyway, 요청자·승인자·완료자·시각·결과 저장
+- 내부 계정과 LDAP 직원의 ITSM 역할, 회사별 실제 현황 집계
 - FinAccess의 토큰 신원 연결, 회사 접근 제한, 요청·승인·반려·모의 이체 처리
 
-FinAdmin API의 직접 호출 규칙은 다음과 같습니다.
+FinAdmin은 `finadmin-api` Client Role을 사용합니다. 금융 앱의 같은 이름 역할과 별개입니다.
 
-| API | 접근 조건 | 반환 내용 |
+| 역할 | 할 수 있는 업무 | 데이터 범위 |
 | --- | --- | --- |
-| `GET /api/hello` | 토큰 없이 가능 | FinAdmin 인사말 |
-| `GET /api/me` | 유효한 FinAdmin 대상 토큰 + user 또는 admin 역할 | 앱 이름, subject, issuer, 이 앱의 역할 |
-| `GET /api/admin/summary` | 유효한 토큰 + `finadmin-api`의 `admin` 역할 | 관리자용 샘플 요약 |
+| user | 요청 등록·조회 | 본인의 요청 |
+| approver | 요청 등록·조회·승인 | 자기 회사, 본인 요청 승인 불가 |
+| admin | 요청 등록·조회·승인·완료·현황 조회 | 자기 회사, 본인 요청 승인 불가 |
 
-Gateway는 `/admin/*`, `/access/*` 전체에 토큰 검증을 적용하므로 Gateway를 거친 인사 API도 토큰이 필요합니다. 관리자 요약의 숫자 3과 7은 고정 예시이고 `sampleData: true`로 표시합니다. 실제 FinAccess 통계가 아닙니다.
+Gateway는 `/admin/api/itsm/*`를 FinAdmin의 `/api/itsm/*`로 전달합니다. Gateway와 Spring이 역할을 각각 확인하고, 회사·요청자·상태는 ITSM DB를 조회해 판단합니다. [전체 API별 정책](docs/14-gateway-rbac-policy.md).
+
+기존 `/api/me`, `/api/hello`, `/api/admin/summary`는 학습·진단용으로 유지합니다. `/api/admin/summary`의 3·7은 `sampleData: true`인 과거 샘플이며, 새 `/api/itsm/summary`는 `sampleData: false`인 자기 회사의 실제 요청 집계입니다. 직접 `/api/hello`만 공개하고 Gateway 경유 hello는 인증·역할을 요구합니다.
 
 ## 실행하기
 
@@ -67,8 +73,8 @@ cd finadmin
 2. 옆 폴더의 FinAccess와 현재 FinAdmin을 각각 실행 JAR로 빌드합니다.
 3. `finlab` 앱 컨테이너들을 실행하고 `finlab-api7`의 Enterprise Gateway를 18090에 연결합니다.
 4. 기존 Keycloak 내부 계정으로 로그인하고 API와 모의 이체를 검증합니다.
-5. LDAP Provider·그룹 역할·직원의 회사 연결을 준비합니다.
-6. LDAP 계정 로그인·모의 이체·그룹 제거와 복원 및 API7 기본 ACL·두 백엔드의 독립 검증를 검증합니다.
+5. LDAP Provider·그룹 역할과 각 앱의 직원·회사 연결을 준비합니다. FinAdmin의 `approver` 역할도 연결합니다.
+6. LDAP 로그인·모의 이체·그룹 제거/복원, API7 ACL·두 백엔드 재검증, ITSM 요청·승인·완료를 검증합니다.
 
 이 스크립트의 빌드 단계는 `bootJar`입니다. 전체 Java 테스트는 아래의 별도 명령으로 실행합니다. 자동 검증에는 실제 토큰의 만료와 Spring 시간 오차 허용 범위를 기다리는 과정이 있어 서버 준비 후에도 1분 이상 걸릴 수 있습니다.
 
@@ -80,19 +86,19 @@ cd finadmin
 | FinAccess 직접 호출 | `http://localhost:18082` | 백엔드의 독립적인 검증 확인 |
 | FinAdmin 직접 호출 | `http://localhost:18083` | 백엔드의 독립적인 검증 확인 |
 
-FinLab 앱의 공개 포트는 내 컴퓨터의 `127.0.0.1`에만 연결합니다. DB와 LDAP는 호스트 포트를 열지 않습니다. LDAP는 컨테이너 내부 `ldap:389`로 연결합니다. 기존 FinAccess 개발 DB와 별개인 `finlab` 전용 DB와 볼륨을 사용합니다.
+FinLab 앱의 공개 포트는 내 컴퓨터의 `127.0.0.1`에만 연결합니다. DB와 LDAP는 호스트 포트를 열지 않습니다. LDAP는 컨테이너 내부 `ldap:389`로 연결합니다. Keycloak DB, FinAccess DB, ITSM DB는 각각의 DB·볼륨을 사용합니다. API7 제품의 자체 관리 DB도 별개입니다.
 
 ## 화면에서 보는 순서
 
-1. 앱 화면에서 `alice`로 로그인합니다.
-2. **FinAdmin 내 정보**를 누르면 200, **관리자 요약**을 누르면 403인지 확인합니다.
-3. **FinAccess 내 정보**의 `sub`와 **FinAdmin 내 정보**의 `subject`, 두 응답의 `issuer`가 같은지 비교합니다.
-4. 로그아웃하고 `admin`으로 로그인하면 관리자 요약이 200으로 바뀌는지 확인합니다.
-5. **토큰 없이 관리자 요약 요청**으로 401을 확인합니다.
+1. [사용자 앱](http://localhost:18090/)에서 **alice**로 Keycloak 로그인 → 서비스명·목적 입력 → **요청 등록**.
+2. 로그아웃하고 Keycloak의 **Logout** 확인 → **bob**으로 로그인 → 해당 요청의 **상세 보기 → 요청 승인**.
+3. 같은 방식으로 **admin** 로그인 → 승인된 요청 선택 → 처리 결과 입력 → **처리 완료로 기록**.
+4. 회사 현황과 상세 화면의 승인·완료 이력이 저장되었는지 확인합니다.
+5. 아래 접힌 **금융 앱 연결과 인증·권한 검사 확인**에서 FinAccess 연결과 과거 샘플의 401·403·200도 비교할 수 있습니다.
 
-비밀번호는 데스크탑의 `finadmin-local-secrets.md`에 있습니다. `admin`은 앱 관리자이고, `bootstrap-admin`은 Keycloak 관리 콘솔 전용 계정입니다.
+비밀번호는 데스크탑의 `finadmin-local-secrets.md`에 있습니다. `admin`은 ITSM 처리 담당자이고, `bootstrap-admin`은 Keycloak 관리 콘솔 전용입니다. LDAP 계정은 **ldap-alice → ldap-bob → ldap-admin** 순서로 동일한 흐름을 사용합니다. `outsider`, `ldap-outsider`는 B회사 요청 직원입니다.
 
-LDAP 연동도 같은 화면에서 **`ldap-alice`(일반 사용자) → `ldap-admin`(관리자)** 순서로 비교합니다. `ldap-bob`은 A회사 결재자, `ldap-outsider`는 B회사 담당자입니다. 네 직원은 개인에게 직접 역할을 부여하지 않고 LDAP 그룹을 통해 역할을 물려받습니다.
+새로고침하면 메모리의 토큰이 사라지며 다시 로그인해야 합니다. 자동 토큰 갱신은 없습니다. 처리 완료는 **수행한 작업의 기록**이며 계정·서버 자동 발급 기능은 아닙니다.
 
 ## 비밀번호·토큰·검증 데이터 위치
 
@@ -103,6 +109,8 @@ LDAP 연동도 같은 화면에서 **`ldap-alice`(일반 사용자) → `ldap-ad
 | 데스크탑 `finadmin-local-secrets.md` | 실제 계정 비밀번호·검증용 액세스 토큰·만료 시각 | 저장소 밖 |
 | `.local/verification.json` | 토큰 없는 검증 상태 코드·잔액 결과 | 제외 |
 | `.local/ldap-verification.json` | LDAP·그룹 역할·JWT·이체 검증 결과 | 제외 |
+| `.local/itsm-verification.json` | 이번 실행의 ITSM 상태 코드·권한·이력 검사 | 제외 |
+| `docs/verification/itsm-2026-10-13.json` | 비밀값을 포함하지 않는 확정 검증 기록 | 포함 |
 
 비밀값 파일은 소유자만 읽고 쓰도록 만들지만 평문입니다. 공개 MD 문서에는 실제 비밀번호와 토큰을 넣지 않습니다. 기존 `.env` 비밀번호는 초기화 스크립트가 보존하며, `.env` 값을 바꿔도 이미 생성한 Keycloak 계정의 비밀번호가 자동으로 변경되지는 않습니다.
 
@@ -111,6 +119,7 @@ LDAP 연동도 같은 화면에서 **`ldap-alice`(일반 사용자) → `ldap-ad
 ```bash
 python3 scripts/verify.py
 python3 scripts/verify-ldap.py
+python3 scripts/verify-itsm.py --restart
 ```
 
 이 명령은 읽기만 하는 상태 확인이 아닙니다. 저장소가 관리하는 `finlab-*` 공개 Client와 필요한 기본 Client Scope 연결을 맞추고, 전용 실습 DB에 회사·사용자 연결을 준비한 뒤 새 계좌와 모의 이체 데이터를 추가합니다. 기존 데이터를 삭제하지 않습니다. 사용자 로그인은 Code + PKCE이며, 설정 동기화에만 관리용 `admin-cli` 토큰을 일시 사용합니다. 세부 동작은 [전체 검증 설명](docs/08-end-to-end-verification.md)에 있습니다.
@@ -118,6 +127,11 @@ python3 scripts/verify-ldap.py
 `verify-ldap.py`도 새 계좌·모의 이체를 만들고, LDAP 관리자 직원을 그룹에서 잠시 제외했다가 복원합니다. LDAP 설정을 처음 적용하거나 원본 설정으로 맞출 때는 `python3 scripts/setup-ldap.py`를 먼저 실행합니다. [재현과 복구 방법](docs/13-ldap-federation-hands-on.md#13-명령으로-재현하기)을 확인하세요.
 
 ## 테스트와 확인한 결과
+
+**2026-10-13 ITSM 확장:** FinAdmin Java 테스트 **51개 통과**, 실제 PKCE·API7·Spring·PostgreSQL·LDAP 계정 검증 **77개 통과**. 백엔드 재시작 후 이력 유지도 포함합니다. HTTP 상태와 신원·범위·로그·저장 내용 검사를 합친 77건이며, Java 테스트와 합산하지 않습니다. [실행 기록](docs/verification/itsm-2026-10-13.json).
+
+ITSM 검증은 요청 4건을 추가합니다. 3건은 완료하고 B회사 1건은 접수 상태로 남깁니다. 기존 데이터는 지우지 않습니다. 이번에 FinAccess 전체 Java 테스트나 과거 135건을 다시 실행한 것으로 표시하지 않습니다.
+
 
 Java 테스트 기록은 2026-09-29, 실제 서버 검증은 LDAP 추가 후 2026-10-01 기준입니다. 아래 표는 당시의 과거 기록입니다. 오늘 이 수의 Java 테스트를 다시 실행한 것은 아닙니다. 현재 API7 구성의 검사 결과는 아래 별도 기록을 기준으로 봅니다.
 
@@ -155,9 +169,11 @@ docker compose -f compose.api7.yaml up -d
 
 일반 중지는 `stop`으로 충분합니다. `down`은 컨테이너와 네트워크를 제거하며, **`down -v`는 DB 볼륨까지 삭제**하므로 일상적인 종료에 사용하지 않습니다. 코드 변경 후에는 `./scripts/start.sh`로 빌드·이미지 생성·검증을 다시 진행합니다.
 
-FinAdmin만 Java로 읽어 보려면 `./gradlew bootRun`도 가능합니다. 이때 기본 직접 주소는 `http://127.0.0.1:8081`이고 Docker의 18083과 다릅니다. 토큰 없는 `/api/hello`는 실행할 수 있으며, 보호된 API에는 Keycloak에서 발급한 유효한 토큰이 필요합니다.
+FinAdmin을 `./gradlew bootRun`으로 별도 실행할 때는 접속 가능한 PostgreSQL의 `ITSM_DB_URL`, `ITSM_DB_USERNAME`, `ITSM_DB_PASSWORD`를 설정해야 합니다. Compose의 ITSM DB는 호스트 포트를 공개하지 않으므로 기본 localhost:5432만으로 연결되지 않습니다. 권장 실습 실행은 위 Compose 흐름입니다. bootRun 기본 직접 주소는 `http://127.0.0.1:8081`입니다.
 
 ## 문서 읽는 순서
+
+현재 ITSM 업무와 코드 읽기 순서는 [18번 가이드](docs/18-itsm-service-requests.md)부터 시작합니다. 아래 01~13번은 금융 인증 실습의 학습 과정이며 작성 날짜를 구분해서 읽습니다.
 
 주석과 문서는 파일의 역할 → 요청이 흐르는 순서 → 설정과 문법의 의미를 쉬운 말로 설명합니다.
 
@@ -183,7 +199,7 @@ FinAdmin만 Java로 읽어 보려면 `./gradlew bootRun`도 가능합니다. 이
 
 LDAP도 Docker 내부의 평문 LDAP 실습이며 StartTLS/LDAPS와 실제 Windows AD는 미적용입니다. 새 로그인에서 그룹 변경이 역할에 반영되는지 확인했고, 기존 JWT는 만료 전까지 관리자 접근이 유지된다는 점도 검증했습니다.
 
-관리자 통계는 샘플이고 사용자 가입·프로비저닝 API는 없습니다. 공개 키로 검증하는 기존 JWT에 역할 변경이나 로그아웃이 즉시 반영된다고 보장하지 않습니다. 여러 프런트 사이의 SSO 시연, Istio, 대규모 부하 시험, 고가용성 검증은 포함하지 않았습니다.
+기존 관리자 요약만 샘플이고 ITSM 현황은 실제 업무 DB 집계입니다. 사용자·회사 연결은 초기 설정 스크립트로 준비하며 운영자 온보딩 UI, 가입·자동 프로비저닝 API는 없습니다. ITSM은 서비스 요청 3단계의 최소 구현이며 반려·취소·SLA·CMDB·장애/변경 관리·알림은 미구현입니다. 공개 키로 검증하는 기존 JWT에 역할 변경이나 로그아웃이 즉시 반영된다고 보장하지 않습니다. 여러 프런트 사이의 SSO 시연, Istio, 대규모 부하 시험, 고가용성 검증은 포함하지 않았습니다.
 
 실제 제품 화면을 따라 읽으려면 [API7 콘솔 캡처 강의자료](docs/16-api7-console-walkthrough.md)를 참고하세요.
 

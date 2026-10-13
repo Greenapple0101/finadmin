@@ -1,6 +1,6 @@
 # Gateway와 백엔드의 역할 정책
 
-2026-10-06 구현 기준. 주 시연 환경은 API7 Enterprise 3.10.2의 `http://localhost:18090`입니다. 기존 OSS APISIX는 제거했습니다.
+2026-10-13 ITSM 확장 기준. 주 시연 환경은 API7 Enterprise 3.10.2의 `http://localhost:18090`입니다. 기존 OSS APISIX는 제거했습니다.
 
 ## 검사 순서
 
@@ -13,7 +13,7 @@ API7 Enterprise는 **기본 Route + OIDC + ACL**로 처리합니다. 사용자 �
 5. 기본 `acl`의 `allow_labels.roles`가 해당 API의 허용 역할을 비교합니다.
 6. Spring은 전달받은 JWT와 역할을 독립적으로 재검증하고 업무 규칙을 적용합니다.
 
-API Route 12개, 미등록 경로·메서드를 막는 fallback 2개, 프런트 Route 1개입니다. fallback은 OIDC 검사 후 기본 `fault-injection.abort`로 403을 반환하며 upstream에 전달하지 않습니다.
+API Route 19개, 미등록 경로·메서드를 막는 fallback 2개, 프런트 Route 1개, 총 22개입니다. fallback은 OIDC 검사 후 기본 `fault-injection.abort`로 403을 반환하며 upstream에 전달하지 않습니다.
 
 정책 원본은 `infra/gateway/policies.json` 하나입니다. `scripts/setup-api7.py`가 실제 제품 설정으로 변환합니다. 이전 OSS 구성과 RBAC 코드는 제거하고 Enterprise 설정을 직접 만듭니다. [실제 콘솔 강의자료](16-api7-console-walkthrough.md)와 [기본 ACL 전환 설명](17-api7-native-authorization.md)을 함께 보세요.
 
@@ -32,9 +32,16 @@ API Route 12개, 미등록 경로·메서드를 막는 fallback 2개, 프런트 
 | POST | `/access/api/transfers/{id}/approve` | `finaccess-api` | approver 또는 admin |
 | POST | `/access/api/transfers/{id}/reject` | `finaccess-api` | approver 또는 admin |
 | POST | `/access/api/transfers/{id}/execute` | `finaccess-api` | approver 또는 admin |
-| GET | `/admin/api/hello` | `finadmin-api` | user 또는 admin |
-| GET | `/admin/api/me` | `finadmin-api` | user 또는 admin |
-| GET | `/admin/api/admin/summary` | `finadmin-api` | admin |
+| GET | `/admin/api/hello` | `finadmin-api` | user 또는 approver 또는 admin |
+| GET | `/admin/api/me` | `finadmin-api` | user 또는 approver 또는 admin |
+| GET | `/admin/api/admin/summary` | `finadmin-api` | admin (기존 샘플) |
+| GET | `/admin/api/itsm/me` | `finadmin-api` | user 또는 approver 또는 admin |
+| GET | `/admin/api/itsm/requests` | `finadmin-api` | user 또는 approver 또는 admin |
+| POST | `/admin/api/itsm/requests` | `finadmin-api` | user 또는 approver 또는 admin |
+| GET | `/admin/api/itsm/requests/{id}` | `finadmin-api` | user 또는 approver 또는 admin |
+| POST | `/admin/api/itsm/requests/{id}/approve` | `finadmin-api` | approver 또는 admin |
+| POST | `/admin/api/itsm/requests/{id}/complete` | `finadmin-api` | admin |
+| GET | `/admin/api/itsm/summary` | `finadmin-api` | admin |
 
 Spring의 직접 `GET /api/hello`는 업무 정보가 없는 공개 진단 예외입니다. Gateway 경유 hello는 앱 역할을 요구합니다. 프런트 정적 파일은 로그인 전에도 필요하므로 공개합니다.
 
@@ -46,11 +53,11 @@ Spring의 직접 `GET /api/hello`는 업무 정보가 없는 공개 진단 예�
 | OpenLDAP | 외부 직원 비밀번호와 그룹 원본 |
 | API7 Enterprise | JWT 검증, 경로·메서드별 RBAC, 라우팅 |
 | FinAccess | JWT·역할 재검증, iss+sub와 업무 사용자 연결, 회사·이체 규칙 |
-| FinAdmin | JWT·역할 재검증, 관리자 API 제한 |
+| FinAdmin | JWT·역할 재검증, ITSM 회사·요청자 범위, 자기 승인 금지, 상태 전이 |
 
 ## 업무 데이터와 역할의 구분
 
-회사 소속은 LDAP 그룹에서 자동 결정되지 않습니다. FinAccess 업무 DB의 `iss + sub` 연결에서 판단합니다. 그룹을 제거해 새 토큰의 역할이 사라져도 기존 미만료 JWT는 발급 당시 역할을 유지합니다.
+회사 소속은 LDAP 그룹에서 자동 결정되지 않습니다. 각 앱의 업무 DB에 저장한 `iss + sub` 연결에서 판단합니다. FinAdmin은 별도 ITSM DB의 `itsm_users.company_id`를 사용합니다. 일반 직원은 자기 요청만, 승인자·처리자는 자기 회사 요청만 다룹니다. admin도 다른 회사 ITSM 요청에는 접근할 수 없습니다. 그룹을 제거해 새 토큰의 역할이 사라져도 기존 미만료 JWT는 발급 당시 역할을 유지합니다.
 
 ## 정책을 바꿀 때
 
