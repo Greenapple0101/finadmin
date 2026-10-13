@@ -28,6 +28,10 @@
         },
         {
           "name": "admin"
+        },
+        {
+          "name": "approver",
+          "description": "ITSM service request approver"
         }
       ]
     }
@@ -459,7 +463,8 @@
           "approver"
         ],
         "finadmin-api": [
-          "user"
+          "user",
+          "approver"
         ]
       }
     },

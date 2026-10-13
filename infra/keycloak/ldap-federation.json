@@ -144,7 +144,8 @@
         "approver"
       ],
       "finadmin-api": [
-        "user"
+        "user",
+        "approver"
       ]
     },
     "admins": {

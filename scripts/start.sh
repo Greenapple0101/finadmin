@@ -13,11 +13,15 @@ docker network inspect api7-ee_api7 >/dev/null
 docker compose up -d --build --wait --wait-timeout 180
 python3 -c "import sys; sys.path.insert(0, 'scripts'); from verify import ISSUER, wait_ready; wait_ready(ISSUER + '/.well-known/openid-configuration')"
 python3 scripts/setup-clients.py
+python3 scripts/setup-itsm.py --roles-only
 python3 scripts/setup-api7.py --apply --start
 python3 scripts/verify.py
 # 원래 내부 계정 검증을 마친 뒤, 외부 직원 명부와 그룹 역할을 연결합니다.
 python3 scripts/setup-ldap.py
+python3 scripts/setup-itsm.py
 python3 scripts/verify-ldap.py
 
 # Gateway·두 Spring 백엔드에서 같은 역할 규칙을 적용했는지 확인합니다.
 python3 scripts/verify-gateway-rbac.py
+# ITSM에도 실제 토큰으로 요청·승인·완료와 회사 경계를 확인합니다.
+python3 scripts/verify-itsm.py

@@ -89,6 +89,7 @@
         "path": "/api/hello",
         "roles": [
           "user",
+          "approver",
           "admin"
         ]
       },
@@ -97,12 +98,71 @@
         "path": "/api/me",
         "roles": [
           "user",
+          "approver",
           "admin"
         ]
       },
       {
         "method": "GET",
         "path": "/api/admin/summary",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/api/itsm/me",
+        "roles": [
+          "user",
+          "approver",
+          "admin"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/api/itsm/summary",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/api/itsm/requests",
+        "roles": [
+          "user",
+          "approver",
+          "admin"
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/api/itsm/requests",
+        "roles": [
+          "user",
+          "approver",
+          "admin"
+        ]
+      },
+      {
+        "method": "GET",
+        "path": "/api/itsm/requests/{id}",
+        "roles": [
+          "user",
+          "approver",
+          "admin"
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/api/itsm/requests/{id}/approve",
+        "roles": [
+          "approver",
+          "admin"
+        ]
+      },
+      {
+        "method": "POST",
+        "path": "/api/itsm/requests/{id}/complete",
         "roles": [
           "admin"
         ]
