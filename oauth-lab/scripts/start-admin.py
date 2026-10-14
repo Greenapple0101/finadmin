@@ -18,7 +18,7 @@ pid_file = PRIVATE / 'finadmin.pid'
 if pid_file.exists():
     previous = subprocess.run(['ps', '-p', pid_file.read_text().strip(), '-o', 'command='], capture_output=True, text=True)
     if str(ROOT / 'build/libs/finadmin-oauth.jar') in previous.stdout:
-        print('FinAdmin가 이미 실행 중입니다: http://localhost:18101/')
+        print('FinAdmin이 이미 실행 중입니다: http://localhost:18101/')
         raise SystemExit(0)
 with socket.socket() as connection:
     if connection.connect_ex(('127.0.0.1', 18101)) == 0:

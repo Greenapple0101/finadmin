@@ -1,0 +1,157 @@
+{
+  "provider": {
+    "name": "oauth-local-ldap",
+    "providerId": "ldap",
+    "providerType": "org.keycloak.storage.UserStorageProvider",
+    "config": {
+      "enabled": [
+        "true"
+      ],
+      "priority": [
+        "0"
+      ],
+      "vendor": [
+        "other"
+      ],
+      "connectionUrl": [
+        "ldap://127.0.0.1:18389"
+      ],
+      "authType": [
+        "simple"
+      ],
+      "bindDn": [
+        "cn=keycloak,ou=services,dc=oauth,dc=lab"
+      ],
+      "usersDn": [
+        "ou=people,dc=oauth,dc=lab"
+      ],
+      "usernameLDAPAttribute": [
+        "uid"
+      ],
+      "rdnLDAPAttribute": [
+        "uid"
+      ],
+      "uuidLDAPAttribute": [
+        "entryUUID"
+      ],
+      "userObjectClasses": [
+        "inetOrgPerson"
+      ],
+      "searchScope": [
+        "2"
+      ],
+      "editMode": [
+        "READ_ONLY"
+      ],
+      "importEnabled": [
+        "true"
+      ],
+      "syncRegistrations": [
+        "false"
+      ],
+      "cachePolicy": [
+        "NO_CACHE"
+      ],
+      "fullSyncPeriod": [
+        "-1"
+      ],
+      "changedSyncPeriod": [
+        "-1"
+      ],
+      "pagination": [
+        "true"
+      ],
+      "batchSizeForSync": [
+        "100"
+      ],
+      "connectionPooling": [
+        "false"
+      ],
+      "connectionTimeout": [
+        "5000"
+      ],
+      "readTimeout": [
+        "5000"
+      ],
+      "startTls": [
+        "false"
+      ],
+      "useTruststoreSpi": [
+        "always"
+      ],
+      "trustEmail": [
+        "false"
+      ],
+      "validatePasswordPolicy": [
+        "false"
+      ]
+    }
+  },
+  "mappers": [
+    {
+      "name": "ldap-business-groups",
+      "providerId": "group-ldap-mapper",
+      "providerType": "org.keycloak.storage.ldap.mappers.LDAPStorageMapper",
+      "config": {
+        "groups.dn": [
+          "ou=groups,dc=oauth,dc=lab"
+        ],
+        "groups.path": [
+          "/ldap"
+        ],
+        "group.name.ldap.attribute": [
+          "cn"
+        ],
+        "group.object.classes": [
+          "groupOfNames"
+        ],
+        "membership.ldap.attribute": [
+          "member"
+        ],
+        "membership.attribute.type": [
+          "DN"
+        ],
+        "membership.user.ldap.attribute": [
+          "uid"
+        ],
+        "mode": [
+          "READ_ONLY"
+        ],
+        "user.roles.retrieve.strategy": [
+          "LOAD_GROUPS_BY_MEMBER_ATTRIBUTE"
+        ],
+        "preserve.group.inheritance": [
+          "false"
+        ],
+        "ignore.missing.groups": [
+          "false"
+        ],
+        "drop.non.existing.groups.during.sync": [
+          "false"
+        ]
+      }
+    },
+    {
+      "name": "department",
+      "providerId": "user-attribute-ldap-mapper",
+      "providerType": "org.keycloak.storage.ldap.mappers.LDAPStorageMapper",
+      "config": {
+        "ldap.attribute": [
+          "ou"
+        ],
+        "user.model.attribute": [
+          "department"
+        ],
+        "read.only": [
+          "true"
+        ],
+        "always.read.value.from.ldap": [
+          "true"
+        ],
+        "is.mandatory.in.ldap": [
+          "false"
+        ]
+      }
+    }
+  ]
+}

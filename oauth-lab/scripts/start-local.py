@@ -52,7 +52,7 @@ def start(name, port, command):
     pid_file.write_text(str(process.pid))
     print(name, '시작 요청. 로그:', PRIVATE / (name + '.log'))
 
-# localhost로 제한합니다. 컨테이너 API7 연결이 필요하면 승인된 실행 구성에서 별도 조정합니다.
+# localhost로 제한합니다. Mac Docker Desktop의 host.docker.internal 경유 연결도 확인했습니다.
 start('keycloak', 18180, [str(home / 'bin/kc.sh'), 'start-dev', '--db=dev-file',
     '--http-host=127.0.0.1', '--http-port=18180', '--hostname=http://localhost:18180',
     '--hostname-backchannel-dynamic=true', '--import-realm'])
@@ -60,5 +60,7 @@ access = ROOT.parents[1] / 'finaccess/oauth-lab/scripts/start-local.py'
 if not access.exists():
     raise SystemExit('옆 finaccess 저장소의 oauth-focus 브랜치가 필요합니다. 화면은 FinAccess에 있습니다.')
 subprocess.run(['python3', str(access)], env=environment, check=True)
+subprocess.run(['python3', str(ROOT / 'scripts/start-ldap.py')], check=True)
+subprocess.run(['python3', str(ROOT / 'scripts/start-admin.py')], check=True)
 print('FinAccess 화면과 USER API: http://localhost:18100/ · Keycloak: http://localhost:18180/admin/')
 print('계정 정보 파일:', credentials)
