@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OAuth2 실습</title>
+<style>
+body{max-width:780px;margin:48px auto;padding:0 24px;font:17px/1.7 system-ui;color:#193249;background:#f5f8fa}h1{font-size:30px}section{background:white;padding:24px;border:1px solid #dbe4ec;border-radius:12px;margin:20px 0}button{font:inherit;padding:9px 16px;margin:5px 5px 5px 0;border:1px solid #176452;border-radius:7px;background:#176452;color:white;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf3f6;padding:16px;border-radius:8px}small{color:#536473}
+</style>
+<h1>Keycloak · API7 OAuth2 실습</h1>
+<p>Access Token을 받고, API7이 API 접근을 허용하는지 확인합니다.</p>
+<section>
+<h2>1. Access Token 받기</h2>
+<p>Keycloak에서 alice 또는 admin으로 인증합니다. 비밀번호는 이 페이지에 입력하지 않습니다.</p>
+<button id="authorize">Keycloak에서 토큰 받기</button>
+<button id="refresh">토큰 갱신</button>
+<button id="clear">이 페이지의 토큰 지우기</button>
+<pre id="token">아직 받은 토큰이 없습니다.</pre>
+<small>토큰은 메모리에만 보관합니다. 새로고침하면 사라집니다. 토큰 지우기는 Keycloak 세션 종료나 서버의 토큰 폐기가 아닙니다.</small>
+</section>
+<section>
+<h2>2. API7에 요청하기</h2>
+<button id="read">일반 API</button><button id="admin">관리자 API</button>
+<button id="anonymous">토큰 없이 호출</button>
+<pre id="result" aria-live="polite">요청 결과가 여기에 표시됩니다.</pre>
+<small>예상 결과: 일반 API는 두 계정 모두 200 · 관리자 API는 alice 403, admin 200 · 토큰 없음 401</small>
+</section>
+<p>이 화면은 OAuth2 요청용 클라이언트입니다. <a href="https://localhost:7443" target="_blank" rel="noopener noreferrer">실제 API7 관리 콘솔</a>은 별도로 엽니다.</p>
+<script src="app.js"></script>
+</html>
