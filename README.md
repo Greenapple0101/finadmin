@@ -1,5 +1,7 @@
 # FinAdmin · IT 서비스 요청·승인·처리 앱
 
+> 현재 사용자 프런트는 [FinAccess OAuth 실습](https://github.com/Greenapple0101/finaccess/tree/oauth-focus/oauth-lab)으로 이동했습니다. FinAdmin에는 프런트 파일이 없습니다. 새 구성은 [oauth-lab](oauth-lab/README.md)에서 확인하며, 아래는 이전 금융·ITSM 구현의 보관 자료입니다.
+
 현재 유일한 FinLab Gateway는 **API7 Enterprise의 기본 OIDC·ACL·Route 기반 인증·인가**입니다. [기본 기능으로 권한 검사를 옮긴 내용](docs/17-api7-native-authorization.md)을 참고하세요. [연동·검증 보고서](docs/15-api7-enterprise-integration.md)와 [API 역할 정책표](docs/14-gateway-rbac-policy.md)를 먼저 보세요. 관리 UI는 `https://localhost:7443`, 사용자 앱은 `http://localhost:18090`입니다.
 
 [FinAccess](https://github.com/Greenapple0101/finaccess) 금융 앱과 별도로 실행하는 **ITSM 서비스 요청 앱**입니다. 직원이 IT 서비스를 요청하면 다른 승인자가 승인하고, 처리 담당자가 작업 결과를 기록합니다. 전체 시스템의 RBAC를 총괄하는 서버가 아닙니다.

@@ -1,3 +1,5 @@
+> 프런트 이동 이후 결과는 [FinAccess 실행 기록](https://github.com/Greenapple0101/finaccess/blob/oauth-focus/oauth-lab/RESULTS.md)을 확인하세요. 아래는 이전 Gateway 모의 응답 단계의 기록입니다.
+
 # OAuth2 실습 실행 기록
 
 2026-10-14 새로 구성하는 실습입니다. 기존 FinLab의 검사 결과를 재사용하지 않습니다.

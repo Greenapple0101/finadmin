@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keycloak과 실습 화면만 로컬 JVM에서 시작합니다. Docker는 조작하지 않습니다."""
+"""Keycloak을 시작하고, 옆 FinAccess 저장소의 Spring 실행 명령을 이어 실행합니다."""
 import json
 import os
 from pathlib import Path
@@ -56,6 +56,9 @@ def start(name, port, command):
 start('keycloak', 18180, [str(home / 'bin/kc.sh'), 'start-dev', '--db=dev-file',
     '--http-host=127.0.0.1', '--http-port=18180', '--hostname=http://localhost:18180',
     '--hostname-backchannel-dynamic=true', '--import-realm'])
-start('frontend', 18100, ['jwebserver', '-b', '127.0.0.1', '-p', '18100', '-d', str(ROOT / 'frontend')])
-print('실습 화면: http://localhost:18100/ · Keycloak: http://localhost:18180/admin/')
+access = ROOT.parents[1] / 'finaccess/oauth-lab/scripts/start-local.py'
+if not access.exists():
+    raise SystemExit('옆 finaccess 저장소의 oauth-focus 브랜치가 필요합니다. 화면은 FinAccess에 있습니다.')
+subprocess.run(['python3', str(access)], env=environment, check=True)
+print('FinAccess 화면과 USER API: http://localhost:18100/ · Keycloak: http://localhost:18180/admin/')
 print('계정 정보 파일:', credentials)

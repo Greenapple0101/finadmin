@@ -62,7 +62,7 @@
         "external_user_label_field_parser": "table",
         "allow_labels": {
           "roles": [
-            "user"
+            "USER"
           ]
         },
         "rejected_code": 403,
@@ -139,7 +139,7 @@
         "external_user_label_field_parser": "table",
         "allow_labels": {
           "roles": [
-            "admin"
+            "ADMIN"
           ]
         },
         "rejected_code": 403,

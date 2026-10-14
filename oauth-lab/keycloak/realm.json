@@ -10,10 +10,10 @@
     "client": {
       "oauth-api": [
         {
-          "name": "user"
+          "name": "USER"
         },
         {
-          "name": "admin"
+          "name": "ADMIN"
         }
       ]
     }
@@ -107,7 +107,7 @@
       ],
       "clientRoles": {
         "oauth-api": [
-          "user"
+          "USER"
         ]
       }
     },
@@ -128,8 +128,7 @@
       ],
       "clientRoles": {
         "oauth-api": [
-          "user",
-          "admin"
+          "ADMIN"
         ]
       }
     }
