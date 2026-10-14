@@ -1,0 +1,21 @@
+// 이 실습은 ADMIN API만 실행합니다. DB와 테스트용 라이브러리는 필요하지 않습니다.
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '4.1.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'io.github.greenapple0101'
+version = '0.0.1-SNAPSHOT'
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+repositories { mavenCentral() }
+
+dependencies {
+    // API 요청을 Controller 메서드로 연결합니다. 화면 파일은 없습니다.
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    // Keycloak의 공개 키로 JWT를 검증하는 Spring Security 기능입니다.
+    implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
+}
+
+tasks.named('bootJar') { archiveFileName = 'finadmin-oauth.jar' }
