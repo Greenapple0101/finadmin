@@ -1,0 +1,200 @@
+[
+  {
+    "name": "oauth-lab-read",
+    "paths": [
+      "/oauth-lab/api/read"
+    ],
+    "methods": [
+      "GET"
+    ],
+    "priority": 300,
+    "plugins": {
+      "cors": {
+        "allow_origins": "http://localhost:18100",
+        "allow_methods": "GET,OPTIONS",
+        "allow_headers": "Authorization",
+        "max_age": 60
+      },
+      "serverless-pre-function": {
+        "phase": "rewrite",
+        "functions": [
+          "return function(conf, ctx)\n  for _, name in ipairs({\"X-Userinfo\", \"X-ID-Token\", \"X-Access-Token\", \"X-Refresh-Token\"}) do\n    ngx.req.clear_header(name)\n  end\nend"
+        ]
+      },
+      "openid-connect": {
+        "client_id": "oauth-api",
+        "discovery": "http://host.docker.internal:18180/realms/oauth-lab/.well-known/openid-configuration",
+        "bearer_only": true,
+        "use_jwks": true,
+        "unauth_action": "deny",
+        "scope": "demo.read",
+        "token_signing_alg_values_expected": "RS256",
+        "accept_none_alg": false,
+        "accept_unsupported_alg": false,
+        "iat_slack": 0,
+        "set_access_token_header": false,
+        "set_id_token_header": false,
+        "set_raw_id_token_header": false,
+        "set_userinfo_header": false,
+        "set_refresh_token_header": false,
+        "claim_validator": {
+          "issuer": {
+            "valid_issuers": [
+              "http://localhost:18180/realms/oauth-lab"
+            ]
+          },
+          "audience": {
+            "claim": "aud",
+            "required": true,
+            "match_with_client_id": true
+          }
+        }
+      },
+      "serverless-post-function": {
+        "phase": "rewrite",
+        "functions": [
+          "return function(conf, ctx)\n  local token = ctx.external_user\n  if type(token) ~= \"table\" or type(token.exp) ~= \"number\" or token.exp <= ngx.time() or\n    (token.nbf ~= nil and (type(token.nbf) ~= \"number\" or token.nbf > ngx.time())) then\n    ngx.header[\"WWW-Authenticate\"] = 'Bearer error=\"invalid_token\"'\n    return 401, {message = \"Token is expired or not yet valid\"}\n  end\nend"
+        ]
+      },
+      "acl": {
+        "external_user_label_field": "$.resource_access[\"oauth-api\"].roles",
+        "external_user_label_field_key": "roles",
+        "external_user_label_field_parser": "table",
+        "allow_labels": {
+          "roles": [
+            "user"
+          ]
+        },
+        "rejected_code": 403,
+        "rejected_msg": "Required API role missing"
+      },
+      "mocking": {
+        "response_status": 200,
+        "content_type": "application/json",
+        "response_example": "{\"message\": \"read allowed\"}",
+        "with_mock_header": false
+      }
+    }
+  },
+  {
+    "name": "oauth-lab-admin",
+    "paths": [
+      "/oauth-lab/api/admin"
+    ],
+    "methods": [
+      "GET"
+    ],
+    "priority": 300,
+    "plugins": {
+      "cors": {
+        "allow_origins": "http://localhost:18100",
+        "allow_methods": "GET,OPTIONS",
+        "allow_headers": "Authorization",
+        "max_age": 60
+      },
+      "serverless-pre-function": {
+        "phase": "rewrite",
+        "functions": [
+          "return function(conf, ctx)\n  for _, name in ipairs({\"X-Userinfo\", \"X-ID-Token\", \"X-Access-Token\", \"X-Refresh-Token\"}) do\n    ngx.req.clear_header(name)\n  end\nend"
+        ]
+      },
+      "openid-connect": {
+        "client_id": "oauth-api",
+        "discovery": "http://host.docker.internal:18180/realms/oauth-lab/.well-known/openid-configuration",
+        "bearer_only": true,
+        "use_jwks": true,
+        "unauth_action": "deny",
+        "scope": "demo.read",
+        "token_signing_alg_values_expected": "RS256",
+        "accept_none_alg": false,
+        "accept_unsupported_alg": false,
+        "iat_slack": 0,
+        "set_access_token_header": false,
+        "set_id_token_header": false,
+        "set_raw_id_token_header": false,
+        "set_userinfo_header": false,
+        "set_refresh_token_header": false,
+        "claim_validator": {
+          "issuer": {
+            "valid_issuers": [
+              "http://localhost:18180/realms/oauth-lab"
+            ]
+          },
+          "audience": {
+            "claim": "aud",
+            "required": true,
+            "match_with_client_id": true
+          }
+        }
+      },
+      "serverless-post-function": {
+        "phase": "rewrite",
+        "functions": [
+          "return function(conf, ctx)\n  local token = ctx.external_user\n  if type(token) ~= \"table\" or type(token.exp) ~= \"number\" or token.exp <= ngx.time() or\n    (token.nbf ~= nil and (type(token.nbf) ~= \"number\" or token.nbf > ngx.time())) then\n    ngx.header[\"WWW-Authenticate\"] = 'Bearer error=\"invalid_token\"'\n    return 401, {message = \"Token is expired or not yet valid\"}\n  end\nend"
+        ]
+      },
+      "acl": {
+        "external_user_label_field": "$.resource_access[\"oauth-api\"].roles",
+        "external_user_label_field_key": "roles",
+        "external_user_label_field_parser": "table",
+        "allow_labels": {
+          "roles": [
+            "admin"
+          ]
+        },
+        "rejected_code": 403,
+        "rejected_msg": "Required API role missing"
+      },
+      "mocking": {
+        "response_status": 200,
+        "content_type": "application/json",
+        "response_example": "{\"message\": \"admin allowed\"}",
+        "with_mock_header": false
+      }
+    }
+  },
+  {
+    "name": "oauth-lab-preflight",
+    "paths": [
+      "/oauth-lab/api/read",
+      "/oauth-lab/api/admin"
+    ],
+    "methods": [
+      "OPTIONS"
+    ],
+    "priority": 300,
+    "plugins": {
+      "cors": {
+        "allow_origins": "http://localhost:18100",
+        "allow_methods": "GET,OPTIONS",
+        "allow_headers": "Authorization",
+        "max_age": 60
+      },
+      "mocking": {
+        "response_status": 204,
+        "response_example": "",
+        "with_mock_header": false
+      }
+    }
+  },
+  {
+    "name": "oauth-lab-fallback",
+    "paths": [
+      "/oauth-lab/api/*"
+    ],
+    "priority": 250,
+    "plugins": {
+      "cors": {
+        "allow_origins": "http://localhost:18100",
+        "allow_methods": "GET,OPTIONS",
+        "allow_headers": "Authorization",
+        "max_age": 60
+      },
+      "mocking": {
+        "response_status": 404,
+        "response_example": "{\"message\":\"No matching lab method or path\"}",
+        "with_mock_header": false
+      }
+    }
+  }
+]
