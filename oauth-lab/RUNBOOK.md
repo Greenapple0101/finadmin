@@ -35,11 +35,13 @@ API7은 기존 Docker Desktop과 API7 설치를 사용합니다. 이미 등록�
 
 1. http://localhost:18100/ 에 접속합니다. 이전 앱 주소 18090의 루트 화면은 사용하지 않습니다.
 2. **Keycloak에서 토큰 받기** → `ldap-user` 로그인.
-3. **내 USER 권한 확인** → 200, USER와 Engineering 확인.
-4. **토큰 없이 호출** → 401.
-5. `ldap-admin`으로 새 로그인 후 같은 USER API 호출 → 403. ADMIN이 USER의 상위 역할인 구성은 아닙니다.
+3. **내 USER 권한 확인** → API7 경유 200. USER·Engineering과 `Gateway: api7-enterprise`, `Backend: finaccess` 확인.
+4. **토큰 없이 호출** → API7에서 401. `Backend: 없음` 확인.
+5. `ldap-admin`으로 새 로그인 후 같은 USER API 호출 → API7에서 403. ADMIN이 USER의 상위 역할인 구성은 아닙니다.
 
 내부 계정 alice=USER, admin=ADMIN도 비교용으로 유지합니다. LDAP 계정은 ldap-user / ldap-admin입니다. 비밀번호는 `.local/credentials.json`과 데스크탑의 비공개 계정 문서에만 있습니다. 화면의 **토큰 지우기**는 Keycloak SSO 로그아웃이 아닙니다.
+
+브라우저는 API7의 `GET http://localhost:18090/oauth-access/api/user/me`를 호출합니다. API7은 `http://localhost:18100` 화면의 CORS 사전 확인(OPTIONS)에 200으로 응답한 후, 실제 GET에서 JWT·USER 역할을 검사합니다. 프런트가 토큰 갱신·로그인 후 받은 토큰을 그대로 전달하며, Spring도 재검증합니다.
 
 ## 3. 관리자 — 로그인 UI 없이 CLI 시작
 
@@ -75,11 +77,18 @@ curl -i -H @.local/curl-header http://localhost:18101/api/admin/me
 curl -i -X POST -H @.local/curl-header http://localhost:18090/oauth-admin/api/admin/me
 ```
 
-Device 로그인 계정을 ldap-user로 바꾸면 관리자 API는 Gateway와 Spring 직접 호출 각각 403입니다.
+Device 로그인 계정을 ldap-user로 바꾸면 관리자 API는 Gateway와 Spring 직접 호출 각각 403입니다. 같은 USER 토큰으로 FinAccess 두 경로를 비교합니다.
+
+```sh
+curl -i -H @.local/curl-header http://localhost:18090/oauth-access/api/user/me
+curl -i -H @.local/curl-header http://localhost:18100/api/user/me
+```
+
+USER이면 둘 다 200이며 ADMIN만 있으면 둘 다 403입니다. 직접 호출 경로는 독립 검증을 보여주는 로컬 비교 경로로 유지합니다.
 
 - `X-OAuth-Gateway: api7-enterprise`: API7 경유 응답.
-- `X-Finlab-Backend: finadmin`: Spring 보안 필터까지 도달한 응답. Controller 실행을 항상 뜻하지는 않습니다.
-- Gateway ACL 403은 Gateway 헤더만 있습니다. 정상 관리자 응답에는 두 헤더가 모두 있습니다.
+- `X-Finlab-Backend: finaccess` 또는 `finadmin`: Spring 보안 필터까지 도달한 응답. Controller 실행을 항상 뜻하지는 않습니다.
+- Gateway ACL 403은 Gateway 헤더만 있습니다. 정상 USER·ADMIN 경유 응답에는 두 헤더가 모두 있습니다.
 - API7의 기본 오류 HTML에 APISIX 문구가 나타날 수 있지만 실행 제품은 응답의 `Server: API7/3.10.2`와 설치 이미지로 확인합니다.
 
 ## 5. API7 실제 관리 UI에서 바꾸기
@@ -90,6 +99,11 @@ https://localhost:7443/ 의 제품 콘솔을 사용합니다. 브라우저에서
 
 | 대상 | 현재 값 | 수정해서 관찰할 항목 |
 |---|---|---|
+| Service `oauth-finaccess` | upstream `host.docker.internal:18100` | USER API 서버 연결 |
+| Route `oauth-access-get` | GET, OPTIONS `/oauth-access/api/user/me`, priority 300 | USER ACL·CORS·접두어 제거 확인 |
+| USER Route의 `acl` | allow_labels.roles = USER | 검증된 JWT의 USER만 허용 |
+| USER Route의 `cors` | origin `http://localhost:18100`, methods `GET,OPTIONS` | 사전 확인과 200·401·403 응답 헤더 확인 |
+| Route `oauth-access-deny` | `/oauth-access/*`, priority 290 | 허용 경로 밖 요청 거절 |
 | Service `oauth-finadmin` | upstream `host.docker.internal:18101` | 잘못된 포트로 바꾸면 upstream 오류. 즉시 원복 |
 | Route `oauth-admin-get` | GET `/oauth-admin/api/admin/*`, priority 300 | 메서드·경로와 플러그인 확인 |
 | `openid-connect` | bearer_only, use_jwks, RS256 | 발급자·audience 검사 |
@@ -99,7 +113,7 @@ https://localhost:7443/ 의 제품 콘솔을 사용합니다. 브라우저에서
 
 OIDC 설정의 client_id는 `oauth-api`, issuer는 `http://localhost:18180/realms/oauth-lab`입니다. 컨테이너 내부 discovery URL은 `http://host.docker.internal:18180/realms/oauth-lab/.well-known/openid-configuration`입니다. 발급자 식별값과 네트워크 접속 주소가 다른 이유입니다.
 
-ACL 역할 위치는 `$.resource_access["oauth-api"].roles`, parser는 table, label key는 roles입니다. Role 검사 코드를 JavaScript/Lua로 새로 작성하지 않았습니다. ADMIN 역할을 지우거나 USER로 바꾸는 실험은 이 실습 Route 안에서만 하고, 끝나면 ADMIN으로 복원합니다. Gateway를 통과해도 Spring에 ADMIN이 없으면 403입니다.
+ACL 역할 위치는 `$.resource_access["oauth-api"].roles`, parser는 table, label key는 roles입니다. Role 검사 코드를 JavaScript/Lua로 새로 작성하지 않았습니다. ADMIN Route의 역할은 ADMIN, USER Route는 USER입니다. 역할 변경 실험은 해당 실습 Route 안에서만 하고 끝나면 원래 값으로 복원합니다. Gateway를 통과해도 해당 Spring이 요구하는 역할이 없으면 403입니다.
 
 UI 수정 후 위 curl을 다시 실행하고 다음 명령으로 현재 상태를 보관합니다. 초기화 명령으로 UI 수정을 덮어쓰지 않습니다.
 
@@ -117,9 +131,10 @@ USER로 Device 로그인한 뒤, 실습용 복사본의 역할만 ADMIN으로 �
 python3 scripts/tamper-token.py
 curl -i -H @.local/tampered-header http://localhost:18090/oauth-admin/api/admin/me
 curl -i -H @.local/tampered-header http://localhost:18101/api/admin/me
+curl -i -H @.local/tampered-header http://localhost:18090/oauth-access/api/user/me
 ```
 
-둘 다 401입니다. 이 실험은 서명 검사 증거입니다. 만료 검사는 **정상 발급 토큰을 수정하지 않고 60초 넘게 기다려** 별도로 확인합니다.
+세 요청 모두 401입니다. 이 실험은 서명 검사 증거입니다. 만료 검사는 **정상 발급 토큰을 수정하지 않고 60초 넘게 기다려** 별도로 확인합니다.
 
 ## 7. 부서 변경과 새 토큰 비교
 

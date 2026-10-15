@@ -2,7 +2,7 @@
 
 ## 네 주체와 Grant
 
-이 실습의 사용자는 Resource Owner, 브라우저·oauth-cli는 Client, Keycloak은 Authorization Server, FinAccess·FinAdmin은 Resource Server입니다. API7은 관리자 API 앞에서 같은 토큰을 검사하는 Gateway입니다.
+이 실습의 사용자는 Resource Owner, 브라우저·oauth-cli는 Client, Keycloak은 Authorization Server, FinAccess·FinAdmin은 Resource Server입니다. API7은 USER·ADMIN API 앞에서 같은 토큰을 검사하는 Gateway입니다. 화면은 FinAccess가 제공하고 API 호출은 두 앱 모두 API7을 경유합니다.
 
 인증은 누구인지 확인하는 것이고, 인가는 그 신원이 어떤 API를 사용할 수 있는지 판단하는 것입니다. OAuth2는 API 접근 권한 위임의 틀이며 사용자 로그인 자체의 표준은 아닙니다. Keycloak은 토큰 발급 과정에서 사람을 인증합니다. OIDC는 OAuth2 위에 ID Token 등 로그인 결과를 표준화한 계층을 추가합니다. 현재 앱은 Access Token만 사용합니다.
 
@@ -34,7 +34,7 @@ JWT는 Header.Payload.Signature의 세 부분으로 표현됩니다. Base64URL �
 
 API7은 `openid-connect` → `acl` → upstream 전달, Spring은 Bearer 추출 → JwtDecoder → 역할 변환 → 접근 규칙 → Controller 순서입니다. JWKS 조회·캐시는 있을 수 있지만 API 요청마다 LDAP 비밀번호를 조회하지는 않습니다.
 
-근거: gateway/finadmin-route.json, 두 앱 SecurityConfig.java. [API7 OIDC 설정](https://docs.api7.ai/hub/openid-connect/configuration), [ACL 설정](https://docs.api7.ai/hub/acl/configuration), [Spring Resource Server](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html).
+근거: gateway/finaccess-route.json, gateway/finadmin-route.json, 두 앱 SecurityConfig.java. [API7 OIDC 설정](https://docs.api7.ai/hub/openid-connect/configuration), [ACL 설정](https://docs.api7.ai/hub/acl/configuration), [Spring Resource Server](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html).
 
 ## LDAP 사용자·부서가 API7에 간다는 뜻
 
