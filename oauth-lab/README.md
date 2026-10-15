@@ -1,6 +1,8 @@
 # Keycloak OAuth2 로컬 PoC
 
-현재 작업 위치는 두 저장소의 `oauth-focus` 브랜치에 있는 `oauth-lab/`입니다. 금융·ITSM 업무, 업무 DB, Kubernetes, 자동화 테스트를 새 실습에 포함하지 않습니다.
+[현재 문서 목차](../docs/README.md) · [전체 아키텍처](https://github.com/Greenapple0101/finadmin/blob/main/docs/current/02-architecture.md)
+
+현재 실행 위치는 두 저장소의 `oauth-lab/`입니다. `main`과 `oauth-focus`에 현재 코드가 있습니다. 금융·ITSM 업무, 업무 DB, Kubernetes, 자동화 테스트를 새 실습에 포함하지 않습니다.
 
 ## 실행 구성
 
@@ -48,7 +50,7 @@ API7 제품의 관리 DB 등 기존 제품 컨테이너도 사용합니다. Spri
 
 LDAP 부서 변경의 새 JWT 반영은 확인했습니다. API7 관리 콘솔 사용자를 자동 생성하는 SCIM 연결은 **구조 검토만 했으며 미구현**입니다. 운영 TLS/LDAPS·고가용성·실제 AD·AI 유료 API 호출은 이번 실행 범위 밖입니다.
 
-`gateway/routes.json`, `scripts/apply-api7.py`, `RESULTS.md`는 이전 모의 Gateway 단계의 자료입니다. 새 실습에는 사용하지 않습니다. 현재 설정은 `gateway/finaccess-*.json`과 `gateway/finadmin-*.json`입니다. 과거 금융·ITSM 전체 구성은 저장소 `main`에 보관합니다.
+`gateway/routes.json`, `scripts/apply-api7.py`, `RESULTS.md`는 이전 모의 Gateway 단계의 자료입니다. 새 실습에는 사용하지 않습니다. 현재 설정은 `gateway/finaccess-*.json`과 `gateway/finadmin-*.json`입니다. 과거 금융·ITSM 자료는 [이전 학습 기록](../docs/README.md#이전-학습-기록)으로 구분합니다. main에도 현재 oauth-lab 코드가 있습니다.
 
 ## API7에서 두 앱 연결
 

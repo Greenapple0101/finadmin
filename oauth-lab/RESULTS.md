@@ -1,6 +1,8 @@
 > 최신 LDAP·FinAdmin·API7 실제 연동 결과는 [2026-10-14 기록](RESULTS-2026-10-14.md)을 확인하세요. 아래는 이전 단계 기록입니다.
 
-> 프런트 이동 이후 결과는 [FinAccess 실행 기록](https://github.com/Greenapple0101/finaccess/blob/oauth-focus/oauth-lab/RESULTS.md)을 확인하세요. 아래는 이전 Gateway 모의 응답 단계의 기록입니다.
+> **초기 단계의 과거 기록입니다.** 아래 직접 호출·모의 Gateway 설명은 당시 상태입니다. 현재 양쪽 API의 API7 경유 구성은 [10/15 결과](https://github.com/Greenapple0101/finadmin/blob/main/oauth-lab/RESULTS-2026-10-15.md)와 [현재 문서](../docs/README.md)를 읽습니다.
+
+> 프런트 이동 이후 결과는 [FinAccess 실행 기록](https://github.com/Greenapple0101/finaccess/blob/main/oauth-lab/RESULTS.md)을 확인하세요. 아래는 이전 Gateway 모의 응답 단계의 기록입니다.
 
 # OAuth2 실습 실행 기록
 

@@ -1,4 +1,8 @@
-# Keycloak 설정을 직접 따라 읽는 FinLab 실습 보고서
+> **과거 학습 기록 — 현재 실행 가이드가 아닙니다.**
+> 현재 OAuth2 최소 구성은 [문서 목차](README.md)에서 확인합니다. 이 문서의 금융·ITSM·DB·이전 인증 설정, 주소, 역할 이름과 캡처는 작성 당시의 자료입니다.
+> 본문의 “현재”·“최신”도 당시 시점을 뜻합니다. 과거 검사 개수를 이번 검증으로 합산하지 않습니다. 현재 실행 코드는 두 저장소의 `oauth-lab/`이며 USER·ADMIN API 모두 API7을 경유합니다.
+
+# [과거 기록] Keycloak 설정을 직접 따라 읽는 FinLab 실습 보고서
 
 > **현재 구성 안내(2026-10-06):** 아래는 당시 설정·검증 스냅샷입니다. 현재는 OpenLDAP과 API7 Enterprise를 사용하며 Gateway도 기본 ACL로 앱 역할을 검사합니다. 현재 구조는 [아키텍처](10-architecture.md), 역할 규칙은 [정책표](14-gateway-rbac-policy.md), 실제 재검증은 [API7 보고서](15-api7-enterprise-integration.md)를 기준으로 보세요.
 
@@ -211,7 +215,7 @@ Web origins는 관리자 권한 목록이 아닙니다. 브라우저가 다른 �
 
 ### 5.3 PKCE를 실제 코드로 연결하기
 
-관련 파일: [frontend/app.js](../frontend/app.js)의 `login()`과 `finishLogin()`.
+관련 파일: [frontend/app.js](https://github.com/Greenapple0101/finadmin/blob/a3289b09a0005dbab4799164bd19e39a7144141b/frontend/app.js)의 `login()`과 `finishLogin()`.
 
 1. 브라우저가 일회용 무작위 `verifier`를 만듭니다.
 2. `SHA-256(verifier)`를 URL에 넣기 좋은 형태로 바꾸어 `challenge`를 만듭니다.
@@ -811,7 +815,7 @@ curl -s http://localhost:18080/realms/finlab/protocol/openid-connect/certs | pyt
 
 이 문서의 현재 값·사용자 역할·Mapper 구성·라우팅·권한 규칙은 실행 중인 로컬 서버와 저장소를 직접 확인한 결과입니다. 공식 문서는 아래 개념과 제품 동작을 교차 확인하는 데 사용했습니다. 메뉴는 실제 26.7.4 화면을 우선했습니다.
 
-- [프로젝트 Realm 설정](../infra/keycloak/finlab-realm.json), [Compose](../compose.yaml), [APISIX 설정](https://github.com/Greenapple0101/finadmin/blob/65977ea0cb190c192656afe71ec26d41e867b617/infra/apisix/apisix.yaml), [브라우저 로그인 코드](../frontend/app.js)
+- [프로젝트 Realm 설정](../infra/keycloak/finlab-realm.json), [Compose](../compose.yaml), [APISIX 설정](https://github.com/Greenapple0101/finadmin/blob/65977ea0cb190c192656afe71ec26d41e867b617/infra/apisix/apisix.yaml), [브라우저 로그인 코드](https://github.com/Greenapple0101/finadmin/blob/a3289b09a0005dbab4799164bd19e39a7144141b/frontend/app.js)
 - [Keycloak 26.7 관리 가이드](https://www.keycloak.org/docs/26.7.0/server_admin/): Realm·Client·Scope와 콘솔 기능
 - [Keycloak Realm import](https://www.keycloak.org/server/importExport): 기존 Realm의 시작 시 import 동작
 - [Keycloak hostname](https://www.keycloak.org/server/hostname): 외부 주소와 내부 통신 주소

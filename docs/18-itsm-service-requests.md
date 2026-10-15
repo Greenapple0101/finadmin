@@ -1,4 +1,8 @@
-# FinAdmin을 ITSM 서비스 요청 앱으로 발전시키기
+> **과거 학습 기록 — 현재 실행 가이드가 아닙니다.**
+> 현재 OAuth2 최소 구성은 [문서 목차](README.md)에서 확인합니다. 이 문서의 금융·ITSM·DB·이전 인증 설정, 주소, 역할 이름과 캡처는 작성 당시의 자료입니다.
+> 본문의 “현재”·“최신”도 당시 시점을 뜻합니다. 과거 검사 개수를 이번 검증으로 합산하지 않습니다. 현재 실행 코드는 두 저장소의 `oauth-lab/`이며 USER·ADMIN API 모두 API7을 경유합니다.
+
+# [과거 기록] FinAdmin을 ITSM 서비스 요청 앱으로 발전시키기
 
 작성·검증: **2026-10-13**, 로컬 FinLab. 실제 구현과 실행 결과를 설명합니다.
 
@@ -98,7 +102,7 @@ API7 실제 관리 UI에서는 **Gateway Groups → finlab-rbac → Services →
 | 5 | [ServiceRequestService.java](../src/main/java/io/github/greenapple0101/finadmin/itsm/ServiceRequestService.java) | 역할·회사·자기 승인 규칙을 확인하고 상태 변경 |
 | 6 | [ServiceRequestController.java](../src/main/java/io/github/greenapple0101/finadmin/itsm/ServiceRequestController.java) | HTTP 요청을 받아 Service에 넘기고 응답 |
 | 7 | [SecurityConfiguration.java](../src/main/java/io/github/greenapple0101/finadmin/security/SecurityConfiguration.java) | Controller에 들어오기 전 JWT·역할 검사 |
-| 8 | [itsm.js](../frontend/itsm.js) | 화면의 입력·버튼을 실제 ITSM API와 연결 |
+| 8 | [itsm.js](https://github.com/Greenapple0101/finadmin/blob/a3289b09a0005dbab4799164bd19e39a7144141b/frontend/itsm.js) | 화면의 입력·버튼을 실제 ITSM API와 연결 |
 
 실제 실행 순서는 **Security → Controller → CurrentItsmUser → Service → Repository/Entity → DB**입니다. 읽는 순서는 요청 데이터가 무엇인지부터 이해하기 쉽게 배치했습니다.
 

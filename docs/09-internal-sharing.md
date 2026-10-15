@@ -1,4 +1,8 @@
-# Keycloak · Apache APISIX · Spring Resource Server 인증·인가 검증
+> **과거 학습 기록 — 현재 실행 가이드가 아닙니다.**
+> 현재 OAuth2 최소 구성은 [문서 목차](README.md)에서 확인합니다. 이 문서의 금융·ITSM·DB·이전 인증 설정, 주소, 역할 이름과 캡처는 작성 당시의 자료입니다.
+> 본문의 “현재”·“최신”도 당시 시점을 뜻합니다. 과거 검사 개수를 이번 검증으로 합산하지 않습니다. 현재 실행 코드는 두 저장소의 `oauth-lab/`이며 USER·ADMIN API 모두 API7을 경유합니다.
+
+# [과거 기록] Keycloak · Apache APISIX · Spring Resource Server 인증·인가 검증
 
 > 과거 구성 기록입니다. 2026-10-06부터 FinLab Gateway는 API7 Enterprise(18090) 하나입니다. 현재 설정·실행 방법은 [Enterprise 보고서](15-api7-enterprise-integration.md)를 참고하세요. 아래 과거 실행 결과와 이미지는 당시 상태로 보존합니다.
 

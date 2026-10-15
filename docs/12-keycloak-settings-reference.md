@@ -1,4 +1,8 @@
-# FinLab Keycloak 설정값 목록과 확인 기록
+> **과거 학습 기록 — 현재 실행 가이드가 아닙니다.**
+> 현재 OAuth2 최소 구성은 [문서 목차](README.md)에서 확인합니다. 이 문서의 금융·ITSM·DB·이전 인증 설정, 주소, 역할 이름과 캡처는 작성 당시의 자료입니다.
+> 본문의 “현재”·“최신”도 당시 시점을 뜻합니다. 과거 검사 개수를 이번 검증으로 합산하지 않습니다. 현재 실행 코드는 두 저장소의 `oauth-lab/`이며 USER·ADMIN API 모두 API7을 경유합니다.
+
+# [과거 기록] FinLab Keycloak 설정값 목록과 확인 기록
 
 > **현재 구성 안내(2026-10-06):** 아래는 당시 설정·검증 스냅샷입니다. 현재는 OpenLDAP과 API7 Enterprise를 사용하며 Gateway도 기본 ACL로 앱 역할을 검사합니다. 현재 구조는 [아키텍처](10-architecture.md), 역할 규칙은 [정책표](14-gateway-rbac-policy.md), 실제 재검증은 [API7 보고서](15-api7-enterprise-integration.md)를 기준으로 보세요.
 
