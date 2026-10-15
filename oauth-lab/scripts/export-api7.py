@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""API7 UI에서 바꾼 세 가지 실습 설정을 읽습니다. 제품 설정을 수정하지 않습니다."""
+"""API7 UI에서 바꾼 USER·ADMIN 실습 설정을 읽습니다. 제품 설정을 수정하지 않습니다."""
 import json
 from api7_admin import ROOT, call, ENTRIES
 

@@ -32,4 +32,7 @@ def call(method, kind, name, payload=None):
 
 ENTRIES = [('services','oauth-finadmin','finadmin-service.json'),
            ('routes','oauth-admin-get','finadmin-route.json'),
-           ('routes','oauth-admin-deny','finadmin-deny.json')]
+           ('routes','oauth-admin-deny','finadmin-deny.json'),
+           ('services','oauth-finaccess','finaccess-service.json'),
+           ('routes','oauth-access-get','finaccess-route.json'),
+           ('routes','oauth-access-deny','finaccess-deny.json')]

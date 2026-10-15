@@ -1,0 +1,14 @@
+{
+  "name": "oauth-finaccess",
+  "upstream": {
+    "type": "roundrobin",
+    "scheme": "http",
+    "nodes": [
+      {
+        "host": "host.docker.internal",
+        "port": 18100,
+        "weight": 1
+      }
+    ]
+  }
+}
