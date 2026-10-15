@@ -1,0 +1,14 @@
+{
+  "name": "oauth-finadmin",
+  "upstream": {
+    "type": "roundrobin",
+    "scheme": "http",
+    "nodes": [
+      {
+        "host": "host.docker.internal",
+        "port": 18101,
+        "weight": 1
+      }
+    ]
+  }
+}

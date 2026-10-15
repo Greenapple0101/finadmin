@@ -1,0 +1,71 @@
+{
+  "name": "oauth-admin-deny",
+  "service_id": "oauth-finadmin",
+  "paths": [
+    "/oauth-admin",
+    "/oauth-admin/*"
+  ],
+  "priority": 290,
+  "plugins": {
+    "openid-connect": {
+      "client_id": "oauth-api",
+      "discovery": "http://host.docker.internal:18180/realms/oauth-lab/.well-known/openid-configuration",
+      "bearer_only": true,
+      "use_jwks": true,
+      "unauth_action": "deny",
+      "token_signing_alg_values_expected": "RS256",
+      "accept_none_alg": false,
+      "accept_unsupported_alg": false,
+      "iat_slack": 0,
+      "set_access_token_header": true,
+      "access_token_in_authorization_header": true,
+      "set_id_token_header": false,
+      "set_raw_id_token_header": false,
+      "set_userinfo_header": false,
+      "set_refresh_token_header": false,
+      "claim_validator": {
+        "issuer": {
+          "valid_issuers": [
+            "http://localhost:18180/realms/oauth-lab"
+          ]
+        },
+        "audience": {
+          "claim": "aud",
+          "required": true,
+          "match_with_client_id": true
+        }
+      }
+    },
+    "acl": {
+      "external_user_label_field": "$.resource_access[\"oauth-api\"].roles",
+      "external_user_label_field_key": "roles",
+      "external_user_label_field_parser": "table",
+      "allow_labels": {
+        "roles": [
+          "ADMIN"
+        ]
+      },
+      "rejected_code": 403,
+      "rejected_msg": "ADMIN role required (API7 ACL)"
+    },
+    "proxy-rewrite": {
+      "regex_uri": [
+        "^/oauth-admin/(.*)$",
+        "/$1"
+      ]
+    },
+    "response-rewrite": {
+      "headers": {
+        "set": {
+          "X-OAuth-Gateway": "api7-enterprise"
+        }
+      }
+    },
+    "fault-injection": {
+      "abort": {
+        "http_status": 403,
+        "body": "{\"message\":\"No matching method/path policy (API7)\"}"
+      }
+    }
+  }
+}

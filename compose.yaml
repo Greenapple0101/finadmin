@@ -131,7 +131,7 @@ services:
     # 로그인은 Keycloak이 처리합니다. 이 컨테이너는 사용자용 HTML·JS만 제공합니다.
     image: nginx:1.28-alpine
     volumes:
-      - ./frontend:/usr/share/nginx/html:ro
+      - ../finaccess/frontend:/usr/share/nginx/html:ro
       - ./infra/web.conf:/etc/nginx/conf.d/default.conf:ro
 
 volumes:

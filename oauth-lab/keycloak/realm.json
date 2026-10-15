@@ -1,0 +1,224 @@
+{
+  "realm": "oauth-lab",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "accessTokenLifespan": 60,
+  "ssoSessionIdleTimeout": 1800,
+  "roles": {
+    "client": {
+      "oauth-api": [
+        {
+          "name": "USER"
+        },
+        {
+          "name": "ADMIN"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "oauth-api",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "bearerOnly": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    },
+    {
+      "clientId": "oauth-browser",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:18100/"
+      ],
+      "webOrigins": [
+        "http://localhost:18100"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "defaultClientScopes": [],
+      "optionalClientScopes": [
+        "demo.read"
+      ],
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "oauth-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "api-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "oauth-api",
+            "claim.name": "resource_access.oauth-api.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "subject",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "config": {
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "department",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "department",
+            "claim.name": "department",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "oauth-cli",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [],
+      "webOrigins": [],
+      "attributes": {
+        "oauth2.device.authorization.grant.enabled": "true"
+      },
+      "defaultClientScopes": [],
+      "optionalClientScopes": [
+        "demo.read"
+      ],
+      "fullScopeAllowed": true,
+      "protocolMappers": [
+        {
+          "name": "api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "oauth-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "api-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "oauth-api",
+            "claim.name": "resource_access.oauth-api.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "subject",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "config": {
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "department",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "department",
+            "claim.name": "department",
+            "jsonType.label": "String",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "demo.read",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": []
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "email": "alice@example.invalid",
+      "emailVerified": true,
+      "firstName": "alice",
+      "lastName": "Lab",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${LAB_ALICE_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "oauth-api": [
+          "USER"
+        ]
+      }
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@example.invalid",
+      "emailVerified": true,
+      "firstName": "admin",
+      "lastName": "Lab",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${LAB_ADMIN_PASSWORD}",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "oauth-api": [
+          "ADMIN"
+        ]
+      }
+    }
+  ]
+}
