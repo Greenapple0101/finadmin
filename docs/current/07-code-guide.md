@@ -14,7 +14,7 @@
 | 4 | [AdminController.java](../../oauth-lab/src/main/java/io/github/greenapple0101/finadmin/oauth/AdminController.java) | 검사를 통과한 요청에 200·400·500 응답 |
 | 5 | [FinAccess 읽는 순서](https://github.com/Greenapple0101/finaccess/blob/main/docs/current/01-code-reading.md) | 화면이 토큰을 얻고 API7에 보내는 과정 |
 | 6 | [Gateway 설정](05-api7-authorization.md) | 그 앞에서 API7이 같은 토큰·역할을 검사 |
-| 7 | [Keycloak·LDAP 설정](04-keycloak-ldap.md) | 토큰에 들어갈 신원·역할·부서가 어디서 왔는지 |
+| 7 | [Keycloak 설정](04-keycloak.md) | 자체 계정·역할과 토큰 Mapper |
 
 각 Spring 앱의 Java 파일은 Application·SecurityConfig·Controller 3개입니다. 이번 최소 앱에는 Entity·Repository·JPA·업무 DB·Flyway가 없습니다.
 
@@ -30,18 +30,18 @@ CSRF 비활성화는 이 API가 브라우저의 자동 전송 인증 쿠키를 �
 
 ## Controller를 읽을 때
 
-- `me`: 검증된 Jwt에서 sub·department를 읽어 응답합니다. 요청자가 쓴 사용자 ID 헤더를 믿지 않습니다.
+- `me`: 검증된 Jwt에서 sub를 읽어 응답합니다. 요청자가 쓴 사용자 ID 헤더를 믿지 않습니다.
 - `greeting`: name 입력을 검사해 200 또는 400을 만듭니다. DB 저장은 하지 않습니다.
 - `demoError`와 `handleDemoError`: 발표용 예외 하나를 500으로 바꿉니다. 시스템의 모든 예외를 숨겨 성공으로 바꾸는 처리가 아닙니다.
 
-비밀번호 검사는 이 Controller에 없습니다. Keycloak과 LDAP가 로그인 시 처리합니다. Spring이 확인하는 것은 그 결과로 발급된 Access Token입니다.
+비밀번호 검사는 이 Controller에 없습니다. Keycloak이 자체 계정으로 로그인할 때 처리합니다. Spring이 확인하는 것은 그 결과로 발급된 Access Token입니다.
 
 ## Python 도구는 무엇인가
 
 | 도구 | 역할·주의점 |
 |---|---|
-| start-local.py | Keycloak·LDAP·두 JVM 앱 기동. 기존 API7 제품 설치를 대신하지 않음 |
-| configure-roles.py / configure-auth.py | 실습 Realm의 역할·Client·LDAP 연결 설정. 관리 대상 값을 변경함 |
+| start-local.py | Keycloak·두 JVM 앱 기동. 기존 API7 제품 설치를 대신하지 않음 |
+| configure-roles.py / configure-auth.py | 실습 Realm의 자체 계정 역할·Client·토큰 Mapper 설정. 관리 대상 값을 변경함 |
 | init-api7.py | 없는 실습 Service·Route만 생성, 기존 UI 변경은 유지 |
 | export-api7.py | 현재 제품 설정을 읽어 비공개 로컬 파일로 저장 |
 | device-login.py | 사람이 Keycloak에서 승인한 결과를 기다려 CLI 토큰 저장 |

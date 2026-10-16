@@ -1,66 +1,47 @@
-# 검증 결과와 화면 근거
+# 현재 구성 검증
 
-[문서 목차](../README.md) · 문서 정리일: 2026-10-16
+[문서 목차](../README.md) · 기준: 2026-10-16
 
-## 현재 API7 경유 구성의 검증 기록
+현재 계정은 Keycloak 자체 사용자 `alice=USER`, `admin=ADMIN`입니다. 이전 구성에서 수집한 화면과 실행 결과는 현재 계정 구성의 검증 근거로 사용하지 않습니다.
 
-[2026-10-15 실행 결과](../../oauth-lab/RESULTS-2026-10-15.md)는 USER·ADMIN 두 API를 모두 API7에 연결한 구성의 수동 HTTP 관찰 19건입니다. 경로·CORS·역할·변조·만료와 ADMIN API 동작을 확인했습니다.
+## 재현할 요청
 
-자동화 테스트 개수가 아니며, 이번 **2026-10-16 파일 정리에서 인증 시연을 재실행한 결과도 아닙니다.** 코드·설정과 기존 실행 근거를 구분합니다.
-
-## 10/15 핵심 결과
-
-| 요청 | 실제 응답 | 확인한 위치 |
-|---|---|---|
-| USER → USER API | 200 | API7 + FinAccess |
-| ADMIN → ADMIN API | 200 | API7 + FinAdmin |
-| USER → ADMIN API | 403 | API7에서 차단, 직접 호출은 FinAdmin에서도 차단 |
-| ADMIN → USER API | 403 | API7에서 차단, 직접 호출은 FinAccess에서도 차단 |
-| 토큰 없음·변조·실제 만료 | 401 | Gateway 및 해당 직접 호출 경로. 세부 범위는 원본 표 참조 |
-| USER 경로 허용하지 않은 메서드·경로 | 403 | API7 fallback |
-| 허용 Origin의 OPTIONS | 200 + CORS 허용 헤더 | API7만 처리 |
-| 다른 Origin의 OPTIONS | 200, 허용 Origin 헤더 없음 | 브라우저 교차 출처 허용은 실패 |
-
-## 현재도 사용하는 기능의 별도 실행 근거
-
-아래는 같은 ADMIN API와 LDAP 설정을 **2026-10-14에 관찰한 결과**입니다. API7을 경유한 요청만 발췌했으며, 위 19건과 합산하지 않습니다. 이번 정리에서 다시 실행하지 않았습니다.
-
-| 확인한 요청·설정 | 당시 실제 결과 |
+| 요청 | 예상 결과 |
 |---|---|
-| ADMIN greeting 정상 입력 | 200, FinAdmin 응답 |
-| ADMIN greeting 입력 누락 | 400, FinAdmin 응답 |
-| ADMIN demo-error | 500, FinAdmin의 의도적인 예외 |
-| ADMIN 존재하지 않는 핸들러 | 404, FinAdmin 응답 |
-| LDAP ldap-admin의 ou를 Support로 변경 후 새 토큰 발급 | API7 경유 200, department=Support |
-| 변경 전의 미만료 토큰 | API7 경유 200, department=Operations 유지 |
-| LDAP 부서를 Operations로 복원 후 새 토큰 발급 | API7 경유 200, department=Operations 복원 |
+| alice → USER API | 200, 사용자 식별자·USER 역할 |
+| admin → ADMIN API | 200, 사용자 식별자 |
+| USER → ADMIN API / ADMIN → USER API | API7에서 403, 직접 Spring 호출도 403 |
+| 토큰 없음·서명 변조·실제 만료 | 401 |
+| 허용 Origin의 OPTIONS | 200, `Access-Control-Allow-Origin: http://localhost:18100` |
+| ADMIN greeting 정상 / 입력 누락 | 200 / 400 |
+| ADMIN demo-error / 없는 핸들러 | 500 / 404 |
 
-비공개 로컬 근거는 `oauth-lab/.local/manual-results.json`입니다. 서명·issuer·audience 설정의 존재와 잘못된 issuer·audience 사례를 실제 실행했다는 주장은 구분합니다.
+1. [RUNBOOK](../../oauth-lab/RUNBOOK.md)으로 Keycloak·두 앱·API7을 준비합니다.
+2. 브라우저에서 alice로 로그인하고 USER API를 호출합니다.
+3. 새 로그인에서 admin으로 바꾸고 같은 USER API의 거절을 확인합니다.
+4. Device Grant로 admin 토큰을 받아 관리자 API를 호출합니다.
+5. 같은 토큰으로 Spring을 직접 호출하여 권한 검사 결과를 비교합니다.
+6. 복사본 JWT 변조와 정상 토큰의 실제 만료를 별도로 확인합니다.
 
-## 실제 FinAccess 사용자 화면
+위 표는 재현 기준입니다. 비밀번호·토큰·비공개 export는 Git에 올리지 않습니다.
 
-아래 두 장은 **2026-10-15 사용자 앱 캡처**입니다. API7 관리 UI 캡처가 아닙니다. 비밀번호·Access Token 원문을 노출하지 않고 HTTP 상태와 역할·경유 헤더를 보여 줍니다.
+## 2026-10-16 실행 확인
 
-### USER 허용
+Windows의 Docker에서 임시 Keycloak 26.7.4와 Java 21 기반의 두 앱을 실행하고, 기존 API7 3.10.2 게이트웨이로 요청했습니다. 저장소의 Realm 원본을 새로 import하고 매번 생성한 임시 비밀번호로 검증했습니다. 검증용 서버와 계정은 종료 후 보관하지 않습니다.
 
-![2026-10-15 USER로 로그인 후 API7과 FinAccess를 거쳐 200을 받은 사용자 화면](../images/current/finaccess-api7-user-2026-10-15.jpg)
+| 검사 | 실제 결과 |
+|---|---|
+| 두 저장소의 Gradle bootJar | 모두 성공 |
+| Python 구문·JSON·문서 링크·현재 설정 참조 | 검사 통과 |
+| Keycloak 사용자 저장소 | 자체 사용자 alice·admin만 존재, 외부 User Storage Provider 없음 |
+| configure-auth / configure-roles 두 번 실행 | 성공, 두 Client의 Mapper가 audience·roles·subject로 일치 |
+| 원본에서 빠진 시험용 Mapper 정리 | 재설정 후 제거 확인 |
+| alice·admin Code+PKCE | 각각 비밀번호 로그인·state·issuer·code 교환·토큰 역할 확인 |
+| USER→USER / ADMIN→ADMIN | API7 경유와 Spring 직접 호출 모두 200 |
+| USER→ADMIN / ADMIN→USER | 두 검사 위치 모두 403 |
+| 토큰 누락·서명 변조·정상 토큰 실제 만료 | 두 검사 위치 모두 401 |
+| USER Refresh | 역할을 유지한 새 Access Token 발급 |
+| CORS 사전 요청 | 200 및 허용 Origin 확인 |
+| Device Grant 시작 요청 | device_code 발급 확인 |
 
-확인할 부분: HTTP 200, Gateway: api7-enterprise, Backend: finaccess, USER·Engineering. 화면 제공 서버와 API 경유 서버가 다른 것을 보여 줍니다.
-
-### ADMIN 전용 토큰의 USER API 접근 거절
-
-![2026-10-15 ADMIN 전용 토큰으로 USER API를 호출해 Gateway에서 403을 받은 사용자 화면](../images/current/finaccess-api7-admin-denied-2026-10-15.jpg)
-
-확인할 부분: HTTP 403, Gateway 표시, Backend 없음. ADMIN이 모든 API의 상위 권한이라는 가정을 하지 않았음을 보여 줍니다. 스크린샷 하나만으로 모든 검증을 증명하지 않으며 전체 조건은 날짜별 표를 함께 읽습니다.
-
-## 재현 순서
-
-1. [RUNBOOK](../../oauth-lab/RUNBOOK.md)대로 프로세스·API7을 준비합니다.
-2. 브라우저에서 ldap-user 로그인 → USER API 200 → 토큰 없는 요청 401.
-3. ldap-admin 로그인 → 같은 USER API 403.
-4. CLI Device 로그인으로 ADMIN 토큰을 발급 → FinAdmin 200·400·500.
-5. USER 토큰으로 관리자 API 403, 직접 Spring 호출에서도 권한 검사 비교.
-6. 복사본 JWT 역할 변조 401과 정상 토큰 실제 만료 401을 별개로 확인합니다.
-7. 부서 실험을 했다면 Operations로 복원하고 새 토큰 응답을 확인합니다.
-
-비공개 헤더 파일·계정 정보·export는 Git에 올리지 않습니다. API7 새 Route의 UI 클릭 편집, SCIM, 운영 네트워크 차단·TLS·장애·부하, AI 모델 호출은 완료로 표시하지 않습니다.
+로그인은 HTTP 클라이언트로 재현했습니다. 실제 브라우저 화면 조작, Device Grant의 사람 승인부터 최종 토큰 발급까지의 전체 흐름, greeting·demo-error 응답은 이번 변경 검증에서 다시 실행하지 않았습니다. 임시 검증은 JUnit 테스트 개수로 계산하지 않습니다.

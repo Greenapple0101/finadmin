@@ -96,6 +96,6 @@ OPTIONS는 API7이 직접 응답하며 USER API를 실행하지 않습니다. �
 
 `init-api7.py`는 없는 리소스만 최초 생성하고 기존 설정은 유지합니다. UI 수정 후 이 명령을 다시 실행해도 파일 내용으로 덮어쓰지 않습니다. 파일은 기준 설정, export는 조회 당시 실행 설정이므로 수정 후 둘을 비교해야 합니다.
 
-설정 존재 확인과 요청의 실제 통과·차단은 별개입니다. [10/15 결과](../../oauth-lab/RESULTS-2026-10-15.md)에서 두 앱 정상 요청, 잘못된 역할, 변조·만료, CORS를 구분했습니다.
+설정 존재 확인과 요청의 실제 통과·차단은 별개입니다. [현재 검증 기록](06-verification.md)에서 정상 요청, 잘못된 역할, 변조·만료, CORS의 확인 범위를 구분합니다.
 
 공식 설명: [API7 ACL](https://docs.api7.ai/hub/acl), [JWT 검증 플러그인 설정](https://docs.api7.ai/hub/openid-connect/configuration), [CORS 설정](https://docs.api7.ai/hub/cors/configuration). 공식 문서의 최신 옵션 전체를 설치된 3.10.2에서 검증했다는 뜻은 아닙니다.

@@ -8,8 +8,8 @@
 
 | 방식 | 이해할 핵심 | 이번 상태 |
 |---|---|---|
-| Authorization Code + PKCE | 브라우저 로그인 후 code를 받고, 처음 만든 verifier와 함께 토큰으로 교환. 코드를 가로채기만 해서는 교환하기 어렵게 함 | FinAccess 실제 구현·LDAP 로그인 확인 |
-| Device Authorization Grant | CLI가 코드를 요청하고 사람이 Keycloak 기본 화면에서 로그인·승인. CLI는 서버가 정한 간격으로 결과 확인 | oauth-cli 실제 구현·ADMIN curl 200 확인 |
+| Authorization Code + PKCE | 브라우저 로그인 후 code를 받고, 처음 만든 verifier와 함께 토큰으로 교환. 코드를 가로채기만 해서는 교환하기 어렵게 함 | FinAccess의 Keycloak 자체 계정 로그인 |
+| Device Authorization Grant | CLI가 코드를 요청하고 사람이 Keycloak 기본 화면에서 로그인·승인. CLI는 서버가 정한 간격으로 결과 확인 | oauth-cli의 Keycloak Device Grant |
 | Client Credentials | 사람 대신 서비스 자신이 Client 인증 정보로 토큰을 받음 | 개념 학습. 사람인 관리자의 로그인 대체로 사용하지 않음 |
 | Implicit | 토큰을 브라우저 리다이렉트 응답으로 바로 전달하던 방식 | 개념만 학습. 비활성화 |
 | Password Grant | 앱이 사람의 비밀번호를 직접 받아 토큰 서버로 전달 | 사용자 앱·CLI에서 비활성화. 설정 도우미의 로컬 master 관리용 호출과 구분 |
@@ -25,27 +25,18 @@ JWT는 Header.Payload.Signature의 세 부분으로 표현됩니다. Base64URL �
 
 - `iss`: 신뢰하는 발급자 oauth-lab Realm인지.
 - `aud`: 우리 실습 API인 oauth-api용인지. 역할과는 별개입니다.
-- `sub`: Keycloak 사용자 식별자. LDAP의 entryUUID를 이용한 사용자 연결과 함께 유지됩니다.
+- `sub`: Keycloak 자체 사용자 식별자.
 - `exp`: 만료 시각. `nbf`가 있으면 사용 가능한 시작 시각도 확인합니다.
 - `resource_access.oauth-api.roles`: USER 또는 ADMIN. 토큰 검증 후에만 사용합니다.
-- `department`: LDAP의 ou에서 온 부서명. Role을 늘리거나 부서별 접근 규칙을 만든 것은 아닙니다.
 
 `demo.read` scope와 USER Role은 다른 개념입니다. 현재 API 정책은 Role을 검사하며 scope별 API 권한 분리를 별도로 구현하지 않았습니다. 토큰이 없거나 검증에 실패하면 401, 토큰은 유효하지만 역할이 부족하면 403입니다.
 
-API7은 `openid-connect` → `acl` → upstream 전달, Spring은 Bearer 추출 → JwtDecoder → 역할 변환 → 접근 규칙 → Controller 순서입니다. JWKS 조회·캐시는 있을 수 있지만 API 요청마다 LDAP 비밀번호를 조회하지는 않습니다.
+API7은 `openid-connect` → `acl` → upstream 전달, Spring은 Bearer 추출 → JwtDecoder → 역할 변환 → 접근 규칙 → Controller 순서입니다. JWKS 조회·캐시는 있을 수 있지만 API 요청마다 사용자 비밀번호를 다시 확인하지는 않습니다.
 
 근거: gateway/finaccess-route.json, gateway/finadmin-route.json, 두 앱 SecurityConfig.java. [API7 OIDC 설정](https://docs.api7.ai/hub/openid-connect/configuration), [ACL 설정](https://docs.api7.ai/hub/acl/configuration), [Spring Resource Server](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html).
 
-## LDAP 사용자·부서가 API7에 간다는 뜻
+## 계정·역할과 관리 콘솔 권한
 
-**이번에 확인한 경로**는 LDAP의 uid·ou·그룹 → Keycloak User Federation → JWT의 sub·department·roles → API7 검증·전달 → FinAdmin 응답입니다. Keycloak은 조회용 Bind 계정으로 명부를 읽고, 직원의 비밀번호 확인은 LDAP에서 수행합니다. 비밀번호를 JWT나 Keycloak 사용자 속성으로 복사하지 않습니다.
+Keycloak 자체 계정 alice에는 USER, admin에는 ADMIN 역할을 연결합니다. 발급된 토큰의 역할로 API7과 Spring이 API 접근을 판단합니다. 사용자 역할을 바꾼 뒤에는 새 토큰을 발급해 비교합니다. 기존 JWT는 발급 당시 역할을 유지합니다.
 
-LDAP는 Mac에서 네이티브 실행하며, READ_ONLY·Import users·NO_CACHE와 department mapper의 always.read.value.from.ldap를 설정했습니다. LDAP 그룹 USER/ADMIN은 Keycloak /ldap/USER·/ldap/ADMIN 그룹을 통해 같은 이름의 Client Role로 연결합니다. 부서는 LDAP ou → Keycloak department → 토큰 department로 전달합니다.
-
-실제 실험에서 ldap-admin의 부서를 Operations→Support로 바꾼 뒤 새 로그인한 토큰에는 Support가, 이미 발급한 토큰에는 Operations가 남았습니다. 실험 뒤 Operations로 복원했습니다. **기존 JWT는 디렉터리의 실시간 조회 결과가 아니라 발급 당시 정보**입니다.
-
-[Keycloak LDAP 공식 문서](https://www.keycloak.org/docs/latest/server_admin/index.html#_ldap).
-
-**다른 의미의 동기화**는 API7 관리 콘솔에 로그인할 운영자 계정을 만드는 것입니다. API7의 [SCIM Provisioning for Dashboard](https://docs.api7.ai/api7-gateway/security-and-compliance/authenticate/scim)는 이 관리 사용자 수명주기를 다룹니다. 서비스 API 호출자의 JWT Role과 관리 콘솔 RBAC를 같은 대상으로 보면 안 됩니다.
-
-LDAP→Keycloak 연결만으로 API7의 SCIM 호출이 자동 생기지는 않습니다. 관리 사용자 프로비저닝이 목표라면 전달할 사용자 범위·관리 역할·비활성화 정책과 별도 SCIM 연계 주체를 정해야 합니다. 이번에는 구조를 검토했고, **SCIM 브리지·관리자 계정 자동 생성·자동 퇴사 처리는 구현하지 않았습니다.**
+API7 관리 콘솔의 운영자 권한은 앱 사용자의 USER·ADMIN과 별개입니다. Keycloak에서 앱 계정을 만들었다고 API7 관리 운영자가 자동 생성되지는 않습니다. SCIM 운영자 자동 생성은 이번 실습에 구현하지 않았습니다.

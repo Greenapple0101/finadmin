@@ -2,12 +2,11 @@
 
 ## 1. 시작하기
 
-두 저장소를 같은 부모 폴더에 두고 현재 코드가 있는 `main`을 사용합니다. 작업 브랜치 `oauth-focus`에도 동일한 문서·코드가 있습니다. 각 저장소의 `oauth-lab/`을 실행합니다. Java 21·Python 3·Homebrew가 필요합니다. 현재 Mac에는 준비되어 있습니다.
+두 저장소를 같은 부모 폴더에 두고 현재 코드가 있는 `main`을 사용합니다. 각 저장소의 `oauth-lab/`을 실행합니다. Java 21·Python 3이 필요합니다. 아래 Python 시작 도구는 macOS용이며 Windows에서는 그대로 실행하지 않습니다.
 
 다른 Mac에서 최초 설치할 때만:
 
 ```sh
-brew install openldap
 cd finadmin/oauth-lab
 mkdir -p .local
 curl -fL -o .local/keycloak.tar.gz https://github.com/keycloak/keycloak/releases/download/26.7.4/keycloak-26.7.4.tar.gz
@@ -20,7 +19,7 @@ tar -xzf .local/keycloak.tar.gz -C .local
 python3 scripts/start-local.py
 ```
 
-Keycloak, OpenLDAP, 옆 FinAccess와 FinAdmin을 시작합니다. Keycloak이 처음 뜨는 중이라면 `.local/keycloak.log`의 started를 확인한 후, 최초 한 번 다음 설정을 적용합니다. 기존 환경에는 이미 적용했습니다.
+Keycloak, 옆 FinAccess와 FinAdmin을 시작합니다. Keycloak이 자체 사용자 alice와 admin을 관리합니다. Keycloak이 처음 뜨는 중이라면 `.local/keycloak.log`의 started를 확인한 후, 최초 한 번 다음 설정을 적용합니다. 기존 환경에는 이미 적용했습니다.
 
 ```sh
 python3 scripts/configure-roles.py
@@ -34,12 +33,12 @@ API7은 기존 Docker Desktop과 API7 설치를 사용합니다. 이미 등록�
 ## 2. 일반 사용자 — FinAccess 화면
 
 1. http://localhost:18100/ 에 접속합니다. API7의 18090은 API 호출 주소입니다.
-2. **Keycloak에서 토큰 받기** → `ldap-user` 로그인.
-3. **내 USER 권한 확인** → API7 경유 200. USER·Engineering과 `Gateway: api7-enterprise`, `Backend: finaccess` 확인.
+2. **Keycloak에서 토큰 받기** → `alice` 로그인.
+3. **내 USER 권한 확인** → API7 경유 200. USER과 `Gateway: api7-enterprise`, `Backend: finaccess` 확인.
 4. **토큰 없이 호출** → API7에서 401. `Backend: 없음` 확인.
-5. `ldap-admin`으로 새 로그인 후 같은 USER API 호출 → API7에서 403. ADMIN이 USER의 상위 역할인 구성은 아닙니다.
+5. `admin`으로 새 로그인 후 같은 USER API 호출 → API7에서 403. ADMIN이 USER의 상위 역할인 구성은 아닙니다.
 
-내부 계정 alice=USER, admin=ADMIN도 비교용으로 유지합니다. LDAP 계정은 ldap-user / ldap-admin입니다. 비밀번호는 `.local/credentials.json`과 데스크탑의 비공개 계정 문서에만 있습니다. 화면의 **토큰 지우기**는 Keycloak SSO 로그아웃이 아닙니다.
+실습 계정은 Keycloak 자체 사용자 alice=USER, admin=ADMIN입니다. 비밀번호는 `.local/credentials.json`에 있습니다. 화면의 **토큰 지우기**는 Keycloak SSO 로그아웃이 아닙니다.
 
 브라우저는 API7의 `GET http://localhost:18090/oauth-access/api/user/me`를 호출합니다. API7은 `http://localhost:18100` 화면의 CORS 사전 확인(OPTIONS)에 200으로 응답한 후, 실제 GET에서 JWT·USER 역할을 검사합니다. 프런트가 토큰 갱신·로그인 후 받은 토큰을 그대로 전달하며, Spring도 재검증합니다.
 
@@ -51,7 +50,7 @@ finadmin/oauth-lab 폴더 터미널에서:
 python3 scripts/device-login.py
 ```
 
-Keycloak 기본 브라우저 화면에서 `ldap-admin`으로 로그인하고 본인이 요청한 접근을 승인합니다. FinAdmin에는 로그인 HTML이 없습니다. **화면이 없는 CLI라도 사람의 인증은 Keycloak 브라우저에서 수행**합니다. 기존 SSO 세션이 있으면 그 계정으로 진행될 수 있으므로 계정을 확인합니다. 계정을 바꾸려면 먼저 Keycloak에서 로그아웃합니다.
+Keycloak 기본 브라우저 화면에서 `admin`으로 로그인하고 본인이 요청한 접근을 승인합니다. FinAdmin에는 로그인 HTML이 없습니다. **화면이 없는 CLI라도 사람의 인증은 Keycloak 브라우저에서 수행**합니다. 기존 SSO 세션이 있으면 그 계정으로 진행될 수 있으므로 계정을 확인합니다. 계정을 바꾸려면 먼저 Keycloak에서 로그아웃합니다.
 
 성공하면 `.local/curl-header`에 짧은 수명의 토큰을 저장합니다. 터미널·명령 기록에 토큰 원문을 붙이지 않아도 됩니다.
 
@@ -77,7 +76,7 @@ curl -i -H @.local/curl-header http://localhost:18101/api/admin/me
 curl -i -X POST -H @.local/curl-header http://localhost:18090/oauth-admin/api/admin/me
 ```
 
-Device 로그인 계정을 ldap-user로 바꾸면 관리자 API는 Gateway와 Spring 직접 호출 각각 403입니다. 같은 USER 토큰으로 FinAccess 두 경로를 비교합니다.
+Device 로그인 계정을 alice로 바꾸면 관리자 API는 Gateway와 Spring 직접 호출 각각 403입니다. 같은 USER 토큰으로 FinAccess 두 경로를 비교합니다.
 
 ```sh
 curl -i -H @.local/curl-header http://localhost:18090/oauth-access/api/user/me
@@ -136,26 +135,8 @@ curl -i -H @.local/tampered-header http://localhost:18090/oauth-access/api/user/
 
 세 요청 모두 401입니다. 이 실험은 서명 검사 증거입니다. 만료 검사는 **정상 발급 토큰을 수정하지 않고 60초 넘게 기다려** 별도로 확인합니다.
 
-## 7. 부서 변경과 새 토큰 비교
+## 7. 재시작·로그
 
-LDAP 관리자 암호는 파일로 전달합니다. 아래 명령은 **이 실습의 ldap-admin 한 명**의 ou만 바꿉니다.
+로그: finadmin/oauth-lab/.local/keycloak.log, .local/finadmin.log 및 finaccess/oauth-lab/.local/finaccess.log.
 
-```sh
-/opt/homebrew/opt/openldap/bin/ldapmodify -x -H ldap://127.0.0.1:18389 \
-  -D 'cn=admin,dc=oauth,dc=lab' -y .local/ldap/root-password <<'LDIF'
-dn: uid=ldap-admin,ou=people,dc=oauth,dc=lab
-changetype: modify
-replace: ou
-ou: Support
-LDIF
-```
-
-Device 로그인으로 새 토큰을 받고 `/oauth-admin/api/admin/me`를 호출하면 department가 Support로 바뀝니다. 이전에 받은 미만료 토큰은 이전 부서를 유지합니다. 비교용 기존 헤더 파일도 .local 안에만 보관하세요.
-
-**시연 후 위 명령의 `ou: Support`를 `ou: Operations`로 바꿔 다시 실행**합니다. 새 토큰에서 Operations 복원을 확인합니다. API7 관리 계정을 만드는 동기화 시험이 아니라 JWT 속성 전달 시험입니다.
-
-## 8. 재시작·로그
-
-로그: finadmin/oauth-lab/.local/keycloak.log, .local/ldap/slapd.log, .local/finadmin.log 및 finaccess/oauth-lab/.local/finaccess.log.
-
-코드 수정 후에는 해당 앱의 `.local/*.pid`가 가리키는 프로세스의 JAR 경로를 확인하여 종료한 다음 시작 명령을 다시 실행합니다. 전체 Java 프로세스를 한꺼번에 종료하지 않습니다. LDAP와 Keycloak 데이터는 .local에 남으므로 삭제하지 않습니다.
+코드 수정 후에는 해당 앱의 `.local/*.pid`가 가리키는 프로세스의 JAR 경로를 확인하여 종료한 다음 시작 명령을 다시 실행합니다. 전체 Java 프로세스를 한꺼번에 종료하지 않습니다. Keycloak 데이터는 .local에 남으므로 재시작할 때 삭제하지 않습니다.

@@ -1,6 +1,6 @@
 # 현재 아키텍처와 요청 순서
 
-[문서 목차](../README.md) · 기준: 2026-10-15 · 현재 실행 폴더: 두 저장소의 `oauth-lab/`
+[문서 목차](../README.md) · 기준: 2026-10-16 · 현재 실행 폴더: 두 저장소의 `oauth-lab/`
 
 ## API 호출과 로그인
 
@@ -8,12 +8,10 @@
 flowchart LR
     caller["호출자: FinAccess 브라우저 / 관리자 CLI"]
     keycloak["Keycloak :18180 / oauth-lab"]
-    ldap["OpenLDAP :18389"]
     gateway["API7 :18090 / JWT + Role"]
     access["FinAccess :18100 / 화면 + USER API"]
     admin["FinAdmin :18101 / ADMIN API"]
     caller -->|"토큰 발급 요청"| keycloak
-    keycloak -->|"직원 조회·인증"| ldap
     caller -->|"API 요청 + Bearer"| gateway
     gateway -->|"/oauth-access/* · USER"| access
     gateway -->|"/oauth-admin/* · ADMIN"| admin
@@ -33,10 +31,10 @@ flowchart TB
     gateway -.->|"JWKS 조회·캐시"| keycloak["Keycloak"]
     access["FinAccess"] -.->|"JWKS 조회·캐시"| keycloak
     admin["FinAdmin"] -.->|"JWKS 조회·캐시"| keycloak
-    keycloak -->|"개발용 설정·사용자 연결 저장"| h2["내장 dev-file H2"]
+    keycloak -->|"개발용 설정·자체 계정 저장"| h2["내장 dev-file H2"]
 ```
 
-점선 화살표는 공개 키를 요청하는 방향입니다. 공개 키 응답은 반대로 돌아옵니다. API마다 LDAP 비밀번호를 재확인하거나 Keycloak에 로그인 요청을 보내는 구조가 아닙니다. JWKS를 가져오거나 갱신하는 네트워크 요청과, 캐시된 공개 키로 JWT를 검증하는 처리를 구분합니다.
+점선 화살표는 공개 키를 요청하는 방향입니다. 공개 키 응답은 반대로 돌아옵니다. API 요청마다 사용자 비밀번호를 재확인하거나 Keycloak에 로그인 요청을 보내는 구조가 아닙니다. JWKS를 가져오거나 갱신하는 네트워크 요청과, 캐시된 공개 키로 JWT를 검증하는 처리를 구분합니다.
 
 ## 실제 주소
 
@@ -45,7 +43,6 @@ flowchart TB
 | FinAccess 화면·USER API | http://localhost:18100 | host.docker.internal:18100 |
 | FinAdmin ADMIN API | http://localhost:18101 | host.docker.internal:18101 |
 | Keycloak | http://localhost:18180 | host.docker.internal:18180 |
-| OpenLDAP | ldap://127.0.0.1:18389 | API7은 LDAP에 직접 로그인하지 않음 |
 | API7 API 진입 | http://localhost:18090 | 제품 Gateway |
 | API7 실제 관리 UI | https://localhost:7443 | 제품 Control Plane |
 
@@ -57,14 +54,12 @@ flowchart TB
 sequenceDiagram
     participant Browser
     participant Keycloak
-    participant LDAP
     participant API7
     participant FinAccess
     Browser->>FinAccess: GET / 화면·JavaScript
     FinAccess-->>Browser: HTML·JS
     Browser->>Keycloak: code 요청 / state / PKCE challenge / demo.read
-    Keycloak->>LDAP: LDAP 사용자 조회·비밀번호 확인
-    LDAP-->>Keycloak: 인증 결과·그룹·부서
+    Keycloak->>Keycloak: 자체 계정 비밀번호 확인·역할 조회
     Keycloak-->>Browser: redirect_uri로 code·state 반환
     Browser->>Browser: state·응답 issuer 확인
     Browser->>Keycloak: code + verifier로 토큰 교환
@@ -75,7 +70,7 @@ sequenceDiagram
     API7->>API7: JWT 검증 후 USER ACL 검사
     API7->>FinAccess: GET /api/user/me + 같은 Bearer
     FinAccess->>FinAccess: JWT 검증 후 USER 역할 검사
-    FinAccess-->>API7: 200 subject·department·roles
+    FinAccess-->>API7: 200 subject·roles
     API7-->>Browser: 200 + Gateway·Backend 헤더
 ```
 
@@ -100,7 +95,7 @@ sequenceDiagram
     API7->>API7: JWT 검증 후 ADMIN ACL 검사
     API7->>FinAdmin: /api/admin/me + 같은 Bearer
     FinAdmin->>FinAdmin: JWT 검증 후 ADMIN 역할 검사
-    FinAdmin-->>API7: 200 subject·department
+    FinAdmin-->>API7: 200 subject
     API7-->>CLI: 200
 ```
 
@@ -108,4 +103,4 @@ CLI 인증에는 ADMIN뿐 아니라 USER도 로그인할 수 있습니다. **Gra
 
 직접 18100·18101로 호출하는 비교 경로도 열려 있습니다. “Gateway 우회 네트워크 차단 완료”라고 설명하지 않습니다. 직접 호출해도 Spring의 검사가 적용되는 것을 확인했습니다.
 
-근거: [프런트 app.js](https://github.com/Greenapple0101/finaccess/blob/main/oauth-lab/src/main/resources/static/app.js), [Device CLI](../../oauth-lab/scripts/device-login.py), [Gateway 설정](../../oauth-lab/gateway), [Keycloak Realm](../../oauth-lab/keycloak/realm.json), [실행 기록](../../oauth-lab/RESULTS-2026-10-15.md).
+근거: [프런트 app.js](https://github.com/Greenapple0101/finaccess/blob/main/oauth-lab/src/main/resources/static/app.js), [Device CLI](../../oauth-lab/scripts/device-login.py), [Gateway 설정](../../oauth-lab/gateway), [Keycloak Realm](../../oauth-lab/keycloak/realm.json), [검증 기록](06-verification.md).

@@ -82,19 +82,6 @@
           "config": {
             "access.token.claim": "true"
           }
-        },
-        {
-          "name": "department",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "config": {
-            "user.attribute": "department",
-            "claim.name": "department",
-            "jsonType.label": "String",
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "userinfo.token.claim": "false"
-          }
         }
       ]
     },
@@ -148,19 +135,6 @@
           "protocolMapper": "oidc-sub-mapper",
           "config": {
             "access.token.claim": "true"
-          }
-        },
-        {
-          "name": "department",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "config": {
-            "user.attribute": "department",
-            "claim.name": "department",
-            "jsonType.label": "String",
-            "access.token.claim": "true",
-            "id.token.claim": "false",
-            "userinfo.token.claim": "false"
           }
         }
       ]

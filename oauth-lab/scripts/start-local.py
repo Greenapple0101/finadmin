@@ -60,7 +60,6 @@ access = ROOT.parents[1] / 'finaccess/oauth-lab/scripts/start-local.py'
 if not access.exists():
     raise SystemExit('옆 finaccess 저장소의 oauth-lab 폴더가 필요합니다. 화면은 FinAccess에 있습니다.')
 subprocess.run(['python3', str(access)], env=environment, check=True)
-subprocess.run(['python3', str(ROOT / 'scripts/start-ldap.py')], check=True)
 subprocess.run(['python3', str(ROOT / 'scripts/start-admin.py')], check=True)
 print('FinAccess 화면과 USER API: http://localhost:18100/ · Keycloak: http://localhost:18180/admin/')
 print('계정 정보 파일:', credentials)

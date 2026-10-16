@@ -19,14 +19,14 @@ API7은 `/oauth-access` 또는 `/oauth-admin`을 제거해 Spring으로 전달�
 
 | 메서드 | Spring 경로 | 역할 | 성공·오류 | 응답·목적 |
 |---|---|---|---|---|
-| GET | `/api/user/me` | USER | 200 | application, message, subject, department, roles |
-| GET | `/api/admin/me` | ADMIN | 200 | application, subject, department, message |
+| GET | `/api/user/me` | USER | 200 | application, message, subject, roles |
+| GET | `/api/admin/me` | ADMIN | 200 | application, subject, message |
 | GET | `/api/admin/greeting?name=Demo` | ADMIN | 200 | message: 인사 문장 |
 | GET | `/api/admin/greeting` | ADMIN | 400 | name 누락·공백 또는 Java 문자열 길이 40 초과 |
 | GET | `/api/admin/demo-error` | ADMIN | 500 | 의도적인 서버 예외를 처리한 message, source |
 | GET | `/api/admin/missing` | ADMIN | 404 | 인증·역할 검사 후 매핑된 Controller가 없음 |
 
-모든 API는 조회·응답 시연용이며 DB에 저장하지 않습니다. POST 생성·201 응답·금융·ITSM API는 현재 명세에 없습니다. `department`는 속성을 표시하는 값이며 부서별 접근 조건으로 사용하지 않습니다.
+모든 API는 조회·응답 시연용이며 DB에 저장하지 않습니다. POST 생성·201 응답·금융·ITSM API는 현재 명세에 없습니다.
 
 정상 USER 응답 예시입니다. subject는 설명용 값이며 실제 토큰은 아닙니다.
 
@@ -35,7 +35,6 @@ API7은 `/oauth-access` 또는 `/oauth-admin`을 제거해 Spring으로 전달�
   "application": "FinAccess",
   "message": "USER 권한으로 FinAccess API에 접근했습니다.",
   "subject": "example-subject",
-  "department": "Engineering",
   "roles": ["USER"]
 }
 ```

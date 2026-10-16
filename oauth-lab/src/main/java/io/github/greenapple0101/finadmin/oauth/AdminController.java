@@ -20,7 +20,6 @@ public class AdminController {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("application", "FinAdmin");
         body.put("subject", jwt.getSubject());
-        body.put("department", jwt.getClaimAsString("department"));
         body.put("message", "ADMIN 권한으로 접근했습니다.");
         return body;
     }
