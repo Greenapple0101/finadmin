@@ -23,4 +23,14 @@ API7 실제 제품 관리 UI: https://localhost:7443
 
 [실행·시연](https://github.com/Greenapple0101/finadmin/blob/main/oauth-lab/RUNBOOK.md) · [API 명세](https://github.com/Greenapple0101/finadmin/blob/main/docs/current/03-api-spec.md) · [10/15 검증·화면](https://github.com/Greenapple0101/finadmin/blob/main/docs/current/06-verification.md)
 
-현재 코드는 **main과 oauth-focus의 oauth-lab/**에 있습니다. 루트의 이전 src·scripts 등은 과거 학습 코드이므로 현재 앱을 실행할 때는 oauth-lab의 안내를 따릅니다. 예전 자료는 [문서 목차의 이전 학습 기록](docs/README.md#이전-학습-기록)에서 구분해 볼 수 있습니다. 과거 테스트 수를 현재 검증 결과에 합산하지 않습니다.
+## 폴더를 읽는 순서
+
+| 위치 | 내용 |
+|---|---|
+| `docs/README.md` | 현재 설명 문서의 시작점 |
+| `oauth-lab/src/main` | 실제 실행하는 작은 Spring 앱 |
+| `oauth-lab/scripts` | 로컬 시작과 시연에 필요한 명령 |
+| `oauth-lab/build.gradle` | 현재 앱의 의존성과 JAR 빌드 설정 |
+| 루트 `settings.gradle`·`gradlew` | 현재 앱만 선택하는 Gradle 실행 도구 |
+
+현재 실행 코드는 `main`과 `oauth-focus`의 `oauth-lab/`에 있습니다. 저장소 루트에서 `./gradlew bootJar`를 실행해도 이 앱 하나만 빌드합니다. 실행은 위 RUNBOOK을 따릅니다. 검증 결과의 실행 날짜는 각 기록에 표시하며 문서 정리일과 구분합니다.

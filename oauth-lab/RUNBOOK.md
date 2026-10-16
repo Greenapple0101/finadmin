@@ -2,7 +2,7 @@
 
 ## 1. 시작하기
 
-두 저장소를 같은 부모 폴더에 두고 현재 코드가 있는 `main`을 사용합니다. 작업 브랜치 `oauth-focus`에도 동일한 문서·코드가 있습니다. 루트 앱 대신 각 저장소의 `oauth-lab/`을 실행합니다. Java 21·Python 3·Homebrew가 필요합니다. 현재 Mac에는 준비되어 있습니다.
+두 저장소를 같은 부모 폴더에 두고 현재 코드가 있는 `main`을 사용합니다. 작업 브랜치 `oauth-focus`에도 동일한 문서·코드가 있습니다. 각 저장소의 `oauth-lab/`을 실행합니다. Java 21·Python 3·Homebrew가 필요합니다. 현재 Mac에는 준비되어 있습니다.
 
 다른 Mac에서 최초 설치할 때만:
 
@@ -33,7 +33,7 @@ API7은 기존 Docker Desktop과 API7 설치를 사용합니다. 이미 등록�
 
 ## 2. 일반 사용자 — FinAccess 화면
 
-1. http://localhost:18100/ 에 접속합니다. 이전 앱 주소 18090의 루트 화면은 사용하지 않습니다.
+1. http://localhost:18100/ 에 접속합니다. API7의 18090은 API 호출 주소입니다.
 2. **Keycloak에서 토큰 받기** → `ldap-user` 로그인.
 3. **내 USER 권한 확인** → API7 경유 200. USER·Engineering과 `Gateway: api7-enterprise`, `Backend: finaccess` 확인.
 4. **토큰 없이 호출** → API7에서 401. `Backend: 없음` 확인.

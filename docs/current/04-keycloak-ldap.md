@@ -4,7 +4,7 @@
 
 ## Realm·Client·Role
 
-Realm은 이번 실습의 사용자와 설정을 묶는 공간입니다. 현재 Realm은 **oauth-lab**, 이전 금융 실습의 finlab과 다릅니다. [realm.json](../../oauth-lab/keycloak/realm.json)에서 아래 값을 확인할 수 있습니다.
+Realm은 이번 실습의 사용자와 설정을 묶는 공간입니다. 현재 Realm은 **oauth-lab**입니다. [realm.json](../../oauth-lab/keycloak/realm.json)에서 아래 값을 확인할 수 있습니다.
 
 | Client | 역할 | 실제 사용 방식 |
 |---|---|---|
@@ -80,6 +80,6 @@ flowchart LR
 
 10/14에는 ldap-admin의 ou를 Operations → Support로 바꾼 뒤 **새 로그인 토큰은 Support, 기존 미만료 토큰은 Operations**인 것을 확인하고 Operations로 복원했습니다. API7에 직원을 운영자 계정으로 생성한 결과가 아닙니다. 토큰 내용은 발급 후 LDAP가 바뀌어도 저절로 수정되지 않습니다.
 
-현재 최소 구성에서 확인한 것은 **부서 속성 변경**입니다. 이전 금융 실습의 LDAP 그룹 제거·권한 회수 검사와 섞지 않습니다. 기존 JWT 즉시 폐기, SCIM 기반 가입·퇴사 처리, 부서별 인가 정책은 구현하지 않았습니다.
+현재 최소 구성에서 확인한 것은 **부서 속성 변경**입니다. 기존 JWT 즉시 폐기, SCIM 기반 가입·퇴사 처리, 부서별 인가 정책은 구현하지 않았습니다.
 
 토큰과 Grant의 쉬운 설명: [OAUTH-NOTES](../../oauth-lab/OAUTH-NOTES.md). 실제 변경·복원 명령: [RUNBOOK](../../oauth-lab/RUNBOOK.md).

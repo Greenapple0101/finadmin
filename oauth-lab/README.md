@@ -42,7 +42,6 @@ API7 제품의 관리 DB 등 기존 제품 컨테이너도 사용합니다. Spri
 2. [OAUTH-NOTES.md](OAUTH-NOTES.md): Grant·JWT·부서 전달·SCIM의 차이
 3. [AI-GATEWAY.md](AI-GATEWAY.md): API7 AI 기능 조사, 현장 적용 여부 구분
 4. [RESULTS-2026-10-15.md](RESULTS-2026-10-15.md): FinAccess API7 연결 검증
-5. [RESULTS-2026-10-14.md](RESULTS-2026-10-14.md): 연결 변경 전의 검증 기록
 
 `src`는 Application → SecurityConfig → Controller 순서로 읽습니다. `scripts`는 로컬 준비·실행·CLI 토큰 발급 도구이며 업무 코드가 아닙니다. 프런트 소스는 옆 `finaccess/oauth-lab/src/main/resources/static`에 있습니다.
 
@@ -50,7 +49,8 @@ API7 제품의 관리 DB 등 기존 제품 컨테이너도 사용합니다. Spri
 
 LDAP 부서 변경의 새 JWT 반영은 확인했습니다. API7 관리 콘솔 사용자를 자동 생성하는 SCIM 연결은 **구조 검토만 했으며 미구현**입니다. 운영 TLS/LDAPS·고가용성·실제 AD·AI 유료 API 호출은 이번 실행 범위 밖입니다.
 
-`gateway/routes.json`, `scripts/apply-api7.py`, `RESULTS.md`는 이전 모의 Gateway 단계의 자료입니다. 새 실습에는 사용하지 않습니다. 현재 설정은 `gateway/finaccess-*.json`과 `gateway/finadmin-*.json`입니다. 과거 금융·ITSM 자료는 [이전 학습 기록](../docs/README.md#이전-학습-기록)으로 구분합니다. main에도 현재 oauth-lab 코드가 있습니다.
+
+현재 Gateway 기준 설정은 `gateway/finaccess-*.json`과 `gateway/finadmin-*.json`입니다.
 
 ## API7에서 두 앱 연결
 

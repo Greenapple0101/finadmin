@@ -49,7 +49,7 @@ FinAdmin은 전체 시스템의 RBAC를 관리하는 서버가 아닙니다. **A
 - 현재 구현: 로컬 OAuth2 Code + PKCE·Device Grant, 수동 Refresh, JWT·Role 검사, LDAP Federation, 두 API의 API7 연결.
 - 개념 학습: OAuth2와 OIDC의 차이, Client Credentials, Implicit·Password Grant의 한계. 앱은 `openid` scope와 ID Token을 사용하지 않습니다.
 - 미구현·미검증: SCIM 운영자 프로비저닝, 부서별 접근 정책, 기존 JWT 즉시 폐기, 운영 TLS/LDAPS, 실제 AD, Kubernetes·고가용성·부하, AI 모델 호출.
-- 이전 학습 기록: 금융 이체·회사 DB·ITSM·JPA·PostgreSQL·JUnit·OSS APISIX. 저장소에 남아 있어도 **현재 실행 대상은 `oauth-lab/`**입니다.
+- 소스 범위: 각 저장소의 `oauth-lab/`만 실행합니다. 업무 DB·JPA·자동화 테스트 소스는 포함하지 않습니다.
 
 모든 구성요소는 같은 Mac에서 실행합니다. 두 Spring·Keycloak은 JVM, LDAP는 Mac 프로세스, API7 및 제품 관리 DB는 Docker입니다. 업무 DB가 없다는 말은 API7 제품 DB나 Keycloak의 개발용 H2까지 없다는 뜻이 아닙니다.
 

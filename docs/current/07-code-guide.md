@@ -4,7 +4,7 @@
 
 ## 폴더부터 구분하기
 
-두 저장소에서 **oauth-lab/src/main**을 펼칩니다. 루트 `src`, `scripts`, `infra`, 예전 Compose 파일의 앱 구성은 이전 금융·ITSM 단계가 섞여 있으므로 현재 학습 순서에 포함하지 않습니다. API7 실행에 재사용하는 `compose.api7.yaml` 등 제품 설정은 RUNBOOK에서 별도로 안내합니다.
+두 저장소에서 **oauth-lab/src/main**을 펼칩니다. 각 앱의 Java 파일 3개부터 읽습니다. 루트의 `settings.gradle`은 이 앱 하나만 선택하며, API7 제품의 `compose.api7.yaml`과 `infra/api7/config.yaml`은 RUNBOOK에서 별도로 안내합니다.
 
 | 순서 | 파일 | 먼저 이해할 내용 |
 |---|---|---|

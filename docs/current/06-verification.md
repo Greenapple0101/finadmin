@@ -1,15 +1,12 @@
 # 검증 결과와 화면 근거
 
-[문서 목차](../README.md) · 문서 정리일: 2026-10-15
+[문서 목차](../README.md) · 문서 정리일: 2026-10-16
 
-## 날짜별 기록
+## 현재 API7 경유 구성의 검증 기록
 
-| 기록 | 당시 구성 | 결과와 범위 |
-|---|---|---|
-| [2026-10-14](../../oauth-lab/RESULTS-2026-10-14.md) | USER는 Spring 직접, ADMIN은 API7 경유 | 수동 HTTP 관찰 23건. LDAP·Device Grant·부서 변경·JWT·200/400/500 등 |
-| [2026-10-15](../../oauth-lab/RESULTS-2026-10-15.md) | USER도 API7 연결, 양쪽 모두 Gateway 경유 | 수동 HTTP 관찰 19건. 새 경로·CORS·역할·변조·만료와 ADMIN 회귀 확인 |
+[2026-10-15 실행 결과](../../oauth-lab/RESULTS-2026-10-15.md)는 USER·ADMIN 두 API를 모두 API7에 연결한 구성의 수동 HTTP 관찰 19건입니다. 경로·CORS·역할·변조·만료와 ADMIN API 동작을 확인했습니다.
 
-두 수를 합쳐 “42개 자동 테스트”라고 표현하지 않습니다. JUnit 테스트를 추가한 작업이 아니며, 이번 **문서 정리 과정에서 위 시나리오를 새로 실행한 것도 아닙니다.** 현재 문서는 코드·설정과 이미 남긴 실행 기록을 대조했습니다.
+자동화 테스트 개수가 아니며, 이번 **2026-10-16 파일 정리에서 인증 시연을 재실행한 결과도 아닙니다.** 코드·설정과 기존 실행 근거를 구분합니다.
 
 ## 10/15 핵심 결과
 
@@ -24,7 +21,21 @@
 | 허용 Origin의 OPTIONS | 200 + CORS 허용 헤더 | API7만 처리 |
 | 다른 Origin의 OPTIONS | 200, 허용 Origin 헤더 없음 | 브라우저 교차 출처 허용은 실패 |
 
-부서 Operations → Support → Operations 복원 및 FinAdmin의 400·500·404는 **10/14 기록**입니다. 10/15에 전부 다시 검증한 것으로 표시하지 않습니다. 서명·issuer·audience 설정 존재와 모든 잘못된 issuer·audience 사례의 신규 실행도 구분합니다.
+## 현재도 사용하는 기능의 별도 실행 근거
+
+아래는 같은 ADMIN API와 LDAP 설정을 **2026-10-14에 관찰한 결과**입니다. API7을 경유한 요청만 발췌했으며, 위 19건과 합산하지 않습니다. 이번 정리에서 다시 실행하지 않았습니다.
+
+| 확인한 요청·설정 | 당시 실제 결과 |
+|---|---|
+| ADMIN greeting 정상 입력 | 200, FinAdmin 응답 |
+| ADMIN greeting 입력 누락 | 400, FinAdmin 응답 |
+| ADMIN demo-error | 500, FinAdmin의 의도적인 예외 |
+| ADMIN 존재하지 않는 핸들러 | 404, FinAdmin 응답 |
+| LDAP ldap-admin의 ou를 Support로 변경 후 새 토큰 발급 | API7 경유 200, department=Support |
+| 변경 전의 미만료 토큰 | API7 경유 200, department=Operations 유지 |
+| LDAP 부서를 Operations로 복원 후 새 토큰 발급 | API7 경유 200, department=Operations 복원 |
+
+비공개 로컬 근거는 `oauth-lab/.local/manual-results.json`입니다. 서명·issuer·audience 설정의 존재와 잘못된 issuer·audience 사례를 실제 실행했다는 주장은 구분합니다.
 
 ## 실제 FinAccess 사용자 화면
 

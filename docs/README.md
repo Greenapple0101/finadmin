@@ -1,6 +1,6 @@
 # FinAdmin · 현재 프로젝트 문서
 
-**2026-10-15 기준: OAuth2·JWT·Role을 보여 주는 최소 PoC입니다.** FinAccess의 USER API와 FinAdmin의 ADMIN API 모두 API7 Enterprise를 경유합니다. 현재 코드는 두 저장소의 `oauth-lab/`에 있습니다. `main`에도 현재 코드가 병합되어 있으므로 main 전체를 과거 구현이라고 부르지 않습니다.
+**2026-10-16 정리 기준: OAuth2·JWT·Role을 보여 주는 최소 PoC입니다.** FinAccess의 USER API와 FinAdmin의 ADMIN API 모두 API7 Enterprise를 경유합니다. 현재 코드는 두 저장소의 `oauth-lab/`에 있습니다. `main`과 `oauth-focus`에 같은 구성을 유지합니다.
 
 ## 처음 읽는 순서
 
@@ -20,34 +20,5 @@
 - [OAuth2·JWT 학습 메모](../oauth-lab/OAUTH-NOTES.md): 현재 쓰는 흐름과 개념만 공부한 흐름 구분.
 - [API7 AI 기능 조사](../oauth-lab/AI-GATEWAY.md): 10/14 조사 문서. 실제 모델 호출은 미실행.
 - [10/15 USER API7 연결 결과](../oauth-lab/RESULTS-2026-10-15.md): HTTP 관찰 19건.
-- [10/14 초기 통합 결과](../oauth-lab/RESULTS-2026-10-14.md): HTTP 관찰 23건. 당시 USER API는 직접 호출.
 
 업무 Role은 대문자 USER·ADMIN 두 개, 공통 audience는 oauth-api입니다. 부서는 JWT 속성 전달이며 회사·부서별 데이터 인가나 SCIM 운영자 생성이 아닙니다. 현재 앱에 업무 DB·JPA·금융·ITSM·레거시 기능은 포함하지 않습니다.
-
-## 이전 학습 기록
-
-아래 링크는 학습 과정과 당시 검증 근거를 보관합니다. **현재 구성을 설치하거나 시연할 때는 위 문서만 사용합니다.** 옛 링크를 깨뜨리지 않도록 파일 위치를 유지하고 각 문서 맨 위에도 같은 구분을 표시했습니다.
-
-<details>
-<summary>과거 금융·ITSM·인증 학습 문서 펼치기</summary>
-
-- [01. 두 번째 백엔드를 만드는 순서](01-first-application.md)
-- [02. Keycloak을 실행하는 순서](02-keycloak-setup.md)
-- [03. Realm·Client·사용자·역할을 구분하기](03-keycloak-realm-client-role.md)
-- [04. 로그인에서 API 호출까지 토큰 따라가기](04-access-token.md)
-- [05. FinAdmin이 받은 JWT를 직접 검증하기](05-jwt-validation.md)
-- [06. 관리자 역할이 있어야 데이터를 보내기](06-admin-authorization.md)
-- [07. APISIX에서 검사하고, 백엔드에서도 다시 검사하기](07-apisix-gateway.md)
-- [08. 실제 로그인부터 두 백엔드와 모의 이체까지 검증하기](08-end-to-end-verification.md)
-- [Keycloak · Apache APISIX · Spring Resource Server 인증·인가 검증](09-internal-sharing.md)
-- [FinLab 인증·인가 아키텍처](10-architecture.md)
-- [Keycloak 설정을 직접 따라 읽는 FinLab 실습 보고서](11-keycloak-hands-on-report.md)
-- [FinLab Keycloak 설정값 목록과 확인 기록](12-keycloak-settings-reference.md)
-- [OpenLDAP → Keycloak → JWT → 두 Spring 앱 실습 보고서](13-ldap-federation-hands-on.md)
-- [Gateway와 백엔드의 역할 정책](14-gateway-rbac-policy.md)
-- [API7 Enterprise 연동과 검증 보고서](15-api7-enterprise-integration.md)
-- [실제 API7 Enterprise 콘솔 읽는 법](16-api7-console-walkthrough.md)
-- [인증·인가를 API7 기본 기능으로 모으기](17-api7-native-authorization.md)
-- [FinAdmin을 ITSM 서비스 요청 앱으로 발전시키기](18-itsm-service-requests.md)
-
-</details>
