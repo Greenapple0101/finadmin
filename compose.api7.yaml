@@ -1,6 +1,6 @@
-# 기존 API7 Control Plane과 FinLab 앱이 실행된 다음 사용하는 별도 DP입니다.
-# 실행: python3 scripts/setup-api7.py --apply --start
-# FinLab의 유일한 Gateway입니다. 기존 API7 default 그룹은 FinLab 외의 별도 설치입니다.
+# 기존 API7 Control Plane에 연결하는 OAuth 실습용 Gateway입니다.
+# 실행: docker compose -f compose.api7.yaml up -d
+# 인증 정보·라이선스·Control Plane은 기존 로컬 제품 설치를 사용합니다.
 name: finlab-api7
 services:
   gateway:
@@ -11,7 +11,8 @@ services:
     volumes:
       - ./infra/api7/config.yaml:/usr/local/apisix/conf/config.yaml:ro
       - ./.local/api7/apisix.uid:/usr/local/apisix/conf/apisix.uid
-    networks: [control, applications]
+    # 두 Spring은 Mac의 JVM입니다. host.docker.internal로 연결합니다.
+    networks: [control]
     labels:
       finlab.role: gateway
       finlab.gateway: api7
@@ -20,6 +21,3 @@ networks:
   control:
     external: true
     name: api7-ee_api7
-  applications:
-    external: true
-    name: finlab_default

@@ -1,5 +1,5 @@
 # API7은 이 파일에서 실행 옵션을 읽고, 실제 라우트는 Control Plane에서 받습니다.
-# 정책의 원본은 infra/gateway입니다. 이 파일에 별도 권한표를 만들지 않습니다.
+# 최초 정책은 oauth-lab/gateway에 있습니다. 이후 제품 UI에서 수정하고 export로 비교합니다.
 apisix:
   node_listen: 9080
   enable_admin: false

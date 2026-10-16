@@ -58,7 +58,7 @@ start('keycloak', 18180, [str(home / 'bin/kc.sh'), 'start-dev', '--db=dev-file',
     '--hostname-backchannel-dynamic=true', '--import-realm'])
 access = ROOT.parents[1] / 'finaccess/oauth-lab/scripts/start-local.py'
 if not access.exists():
-    raise SystemExit('옆 finaccess 저장소의 oauth-focus 브랜치가 필요합니다. 화면은 FinAccess에 있습니다.')
+    raise SystemExit('옆 finaccess 저장소의 oauth-lab 폴더가 필요합니다. 화면은 FinAccess에 있습니다.')
 subprocess.run(['python3', str(access)], env=environment, check=True)
 subprocess.run(['python3', str(ROOT / 'scripts/start-ldap.py')], check=True)
 subprocess.run(['python3', str(ROOT / 'scripts/start-admin.py')], check=True)

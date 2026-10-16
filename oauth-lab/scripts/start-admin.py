@@ -24,7 +24,7 @@ with socket.socket() as connection:
     if connection.connect_ex(('127.0.0.1', 18101)) == 0:
         raise SystemExit('18101 포트를 사용 중입니다. 기존 실습 서버를 중지한 뒤 실행하세요.')
 
-# -p는 빌드할 폴더입니다. 상위 저장소의 과거 금융 앱 대신 이 작은 실습 앱만 빌드합니다.
+# -p는 빌드할 폴더입니다. oauth-lab의 소스와 설정으로 실행 JAR을 만듭니다.
 subprocess.run([str(ROOT.parent / 'gradlew'), '-p', str(ROOT), 'bootJar', '--console=plain'], env=environment, check=True)
 with (PRIVATE / 'finadmin.log').open('a') as log:
     process = subprocess.Popen([str(Path(java_home) / 'bin/java'), '-Xms64m', '-Xmx256m', '-jar',
